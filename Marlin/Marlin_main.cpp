@@ -258,6 +258,12 @@ int EtoPPressure=0;
   #endif
 #endif
 
+// LED Brightness
+#if defined(LED_PIN) && LED_PIN > -1
+  int ledPwm=0;
+#endif
+
+
 #ifdef DELTA
   float delta[3] = {0.0, 0.0, 0.0};
   #define SIN_60 0.8660254037844386
@@ -1809,6 +1815,12 @@ void process_commands()
         if (pin_number == FAN_PIN)
           fanSpeed = pin_status;
       #endif
+      // LED Brightness
+      #if defined(LED_PIN) && LED_PIN > -1
+        if (pin_number == LED_PIN)
+          ledPwm = pin_status;
+      #endif
+
         if (pin_number > -1)
         {
           pinMode(pin_number, OUTPUT);
