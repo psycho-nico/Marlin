@@ -43,6 +43,10 @@ char lcd_status_message[LCD_WIDTH+1] = WELCOME_MSG;
 void copy_and_scalePID_i();
 void copy_and_scalePID_d();
 
+#if defined(LED_PIN) && LED_PIN > -1
+void set_ledPwm();
+#endif
+
 /* Different menus */
 static void lcd_status_screen();
 #ifdef ULTIPANEL
@@ -798,6 +802,10 @@ static void lcd_control_menu()
 #ifdef DOGLCD
 //    MENU_ITEM_EDIT(int3, MSG_CONTRAST, &lcd_contrast, 0, 63);
     MENU_ITEM(submenu, MSG_CONTRAST, lcd_set_contrast);
+#endif
+#if defined(LED_PIN) && LED_PIN > -1
+    // LED Brightness
+    MENU_ITEM_EDIT_CALLBACK(int3, MSG_LED_PWM, &ledPwm, 0, 255, set_ledPwm);
 #endif
 #ifdef FWRETRACT
     MENU_ITEM(submenu, MSG_RETRACT, lcd_control_retract_menu);
@@ -1682,5 +1690,14 @@ void copy_and_scalePID_d()
   updatePID();
 #endif
 }
+
+// LED Brightness
+#if defined(LED_PIN) && LED_PIN > -1
+void set_ledPwm()
+{
+  pinMode(LED_PIN, OUTPUT);
+  analogWrite(LED_PIN, ledPwm);
+}
+#endif
 
 #endif //ULTRA_LCD
