@@ -379,7 +379,7 @@ int8_t SdBaseFile::lsPrintNext( uint8_t flags, uint8_t indent) {
 }
 //------------------------------------------------------------------------------
 // format directory name field from a 8.3 name string
-bool SdBaseFile::make83Name(const char* str, uint8_t* name, const char** ptr) {
+bool SdBaseFile::make83Name(const char* str, uint8_t* name, const char** ptr, uint8_t oflag) {
   uint8_t c;
   uint8_t n = 7;  // max index for part before dot
   uint8_t i = 0;
@@ -398,7 +398,8 @@ bool SdBaseFile::make83Name(const char* str, uint8_t* name, const char** ptr) {
       uint8_t b;
       while ((b = pgm_read_byte(p++))) if (b == c) goto fail;
       // check size and only allow ASCII printable characters
-      if (i > n || c < 0X21 || c > 0X7E)goto fail;
+      // In read mode accept 8bits chars
+      if (i > n || c < 0X21 || (c > 0X7E && oflag != O_READ))goto fail;
       // only upper case allowed in 8.3 names - convert lower to upper
       name[i++] = (c < 'a' || c > 'z') ?  (c) : (c + ('A' - 'a'));
     }
@@ -441,7 +442,7 @@ bool SdBaseFile::mkdir(SdBaseFile* parent, const char* path, bool pFlag) {
     }
   }
   while (1) {
-    if (!make83Name(path, dname, &path)) goto fail;
+    if (!make83Name(path, dname, &path, O_WRITE)) goto fail;
     while (*path == '/') path++;
     if (!*path) break;
     if (!sub->open(parent, dname, O_READ)) {
@@ -600,7 +601,7 @@ bool SdBaseFile::open(SdBaseFile* dirFile, const char* path, uint8_t oflag) {
     }
   }
   while (1) {
-    if (!make83Name(path, dname, &path)) goto fail;
+    if (!make83Name(path, dname, &path, oflag)) goto fail;
     while (*path == '/') path++;
     if (!*path) break;
     if (!sub->open(parent, dname, O_READ)) goto fail;
