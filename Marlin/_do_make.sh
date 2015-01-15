@@ -41,7 +41,7 @@ PATH="${ARDUINO_PATH}/hardware/tools/avr/bin:${PATH}"
 # Defaults for UMO:
 HARDWARE_MOTHERBOARD=7
 TEMP_SENSOR_1=-1
-Version="Ultimaker:"
+Version="Ultimaker:_"
 
 # Parse arguments 
 while [ $# -gt 0 ]
@@ -72,7 +72,7 @@ do
           UM2)
             # Set board, sensor and Suffix
             Suffix="UM2"
-			Version="Version:"
+			Version="Version:_"
             HARDWARE_MOTHERBOARD=72
             TEMP_SENSOR_1=20
             ;;
@@ -133,7 +133,7 @@ do
   esac
 done
 
-Version="${Version}_${Build}"
+Version="${Version}${Build}"
 
 cat <<-EOF
 	$0: Build summary
