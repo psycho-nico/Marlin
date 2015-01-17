@@ -62,15 +62,15 @@
 
 
 /* Custom characters defined in font font_6x10_marlin.c */
-#define LCD_STR_BEDTEMP     "\xFE"
+#define LCD_STR_BEDTEMP     "\x9E"
 #define LCD_STR_DEGREE      "\xB0"
-#define LCD_STR_THERMOMETER "\xFF"
-#define LCD_STR_UPLEVEL     "\xFB"
-#define LCD_STR_REFRESH     "\xF8"
-#define LCD_STR_FOLDER      "\xF9"
-#define LCD_STR_FEEDRATE    "\xFD"
-#define LCD_STR_CLOCK       "\xFC"
-#define LCD_STR_ARROW_RIGHT "\xFA"
+#define LCD_STR_THERMOMETER "\x9F"
+#define LCD_STR_UPLEVEL     "\x9B"
+#define LCD_STR_REFRESH     "\x98"
+#define LCD_STR_FOLDER      "\x99"
+#define LCD_STR_FEEDRATE    "\x9D"
+#define LCD_STR_CLOCK       "\x9C"
+#define LCD_STR_ARROW_RIGHT "\x9A"
 
 #define FONT_STATUSMENU	u8g_font_6x9
 
