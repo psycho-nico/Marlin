@@ -154,19 +154,23 @@
 // 147 is Pt100 with 4k7 pullup
 // 110 is Pt100 with 1k pullup (non standard)
 
-#ifdef ULTIMAKER_UMOP
-#define TEMP_SENSOR_0 20
-#else
-#define TEMP_SENSOR_0 -1
+#ifndef TEMP_SENSOR_0
+  #ifdef ULTIMAKER_UMOP
+    #define TEMP_SENSOR_0 20
+  #else
+    #define TEMP_SENSOR_0 -1
+  #endif
 #endif
 #ifndef TEMP_SENSOR_1
-#define TEMP_SENSOR_1 0
+  #define TEMP_SENSOR_1 0
 #endif
 #define TEMP_SENSOR_2 0
-#ifdef ULTIMAKER_HBK
-#define TEMP_SENSOR_BED 20
-#else
-#define TEMP_SENSOR_BED 0
+#ifndef TEMP_SENSOR_BED
+  #ifdef ULTIMAKER_HBK
+    #define TEMP_SENSOR_BED 20
+  #else
+    #define TEMP_SENSOR_BED 0
+  #endif
 #endif
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
