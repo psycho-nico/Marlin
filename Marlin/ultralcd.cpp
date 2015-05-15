@@ -1496,7 +1496,7 @@ bool lcd_clicked()
 char conv[8];
 char *ftostr3(const float &x)
 {
-  return itostr3((int)x);
+  return itostr3(x > 0 ? (int)(x + 0.5) : (int)(x + 0.5));
 }
 
 char *itostr2(const uint8_t &x)
@@ -1512,7 +1512,7 @@ char *itostr2(const uint8_t &x)
 //  convert float to string with +123.4 format
 char *ftostr31(const float &x)
 {
-  int xx=x*10;
+  int xx=x > 0 ? (int) (x*10 + 0.5) : (int) (x*10 - 0.5);
   conv[0]=(xx>=0)?'+':'-';
   xx=abs(xx);
   conv[1]=(xx/1000)%10+'0';
@@ -1527,7 +1527,7 @@ char *ftostr31(const float &x)
 //  convert float to string with 123.4 format
 char *ftostr31ns(const float &x)
 {
-  int xx=x*10;
+  int xx=x > 0 ? (int) (x*10 + 0.5) : (int) (x*10 - 0.5);
   //conv[0]=(xx>=0)?'+':'-';
   xx=abs(xx);
   conv[0]=(xx/1000)%10+'0';
@@ -1541,7 +1541,7 @@ char *ftostr31ns(const float &x)
 
 char *ftostr32(const float &x)
 {
-  long xx=x*100;
+  long xx=x > 0 ? (long) (x*100 + 0.5) : (long) (x*100 - 0.5);
   if (xx >= 0)
     conv[0]=(xx/10000)%10+'0';
   else
@@ -1628,7 +1628,7 @@ char *itostr4(const int &xx)
 //  convert float to string with 12345 format
 char *ftostr5(const float &x)
 {
-  long xx=abs(x);
+  long xx=abs(x) + 0.5;
   if (xx >= 10000)
     conv[0]=(xx/10000)%10+'0';
   else
@@ -1653,7 +1653,7 @@ char *ftostr5(const float &x)
 //  convert float to string with +1234.5 format
 char *ftostr51(const float &x)
 {
-  long xx=x*10;
+  long xx=x > 0 ? (long) (x*10 + 0.5) : (long) (x*10 - 0.5);
   conv[0]=(xx>=0)?'+':'-';
   xx=abs(xx);
   conv[1]=(xx/10000)%10+'0';
@@ -1669,7 +1669,7 @@ char *ftostr51(const float &x)
 //  convert float to string with +123.45 format
 char *ftostr52(const float &x)
 {
-  long xx=x*100;
+  long xx=x > 0 ? (long) (x*100 + 0.5) : (long) (x*100 - 0.5);
   conv[0]=(xx>=0)?'+':'-';
   xx=abs(xx);
   conv[1]=(xx/10000)%10+'0';
