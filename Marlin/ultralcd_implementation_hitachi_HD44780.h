@@ -502,6 +502,14 @@ static void lcd_implementation_status_screen()
     //Status message line on the last line
     lcd.setCursor(0, LCD_HEIGHT - 1);
     lcd.print(lcd_status_message);
+
+# if LCD_WIDTH > 19 && defined(FAN_PIN) && FAN_PIN > -1 && defined(DISPLAY_FAN)
+    // Display fan on the last 6 position of the status line
+    lcd.setCursor(LCD_WIDTH - 6, LCD_HEIGHT - 1);
+    lcd_printPGM(PSTR(" F"));
+    lcd.print(itostr3(int((fanSpeed*100)/255)));
+    lcd.print('%');
+#endif
 }
 static void lcd_implementation_drawmenu_generic(uint8_t row, const char* pstr, char pre_char, char post_char)
 {
