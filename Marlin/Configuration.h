@@ -498,11 +498,18 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
 // default settings
 
+// UMO MXL pulleys have 78.7402 steps/u, while GT2 have exactly 80.0
+#ifdef ULTIMAKER_GT2
+#define XY_STEPS 80.0
+#else
+#define XY_STEPS 78.7402
+#endif
+
 #ifdef ULTIMAKER_HBK
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {78.7402,78.7402,200.0,760*1.1}  // default steps per unit for Ultimaker
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {XY_STEPS,XY_STEPS,200.0,760*1.1}  // default steps per unit for Ultimaker
 #define DEFAULT_MAX_FEEDRATE          {500, 500, 30, 25}    // (mm/sec)
 #else
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {78.7402,78.7402,200.0*8/3,760*1.1}  // default steps per unit for Ultimaker
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {XY_STEPS,XY_STEPS,200.0*8/3,760*1.1}  // default steps per unit for Ultimaker
 #define DEFAULT_MAX_FEEDRATE          {500, 500, 5, 25}    // (mm/sec)
 #endif
 #define DEFAULT_MAX_ACCELERATION      {9000,9000,100,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
