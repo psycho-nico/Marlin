@@ -506,6 +506,8 @@ static void lcd_implementation_status_screen()
     lcd.print('F');
     lcd.print(itostr3(int((fanSpeed*100)/255)));
     lcd_printPGM(PSTR("% "));
+    // Truncate status message to 14 chars to avoid LCD wrap
+    lcd_status_message[14] = '\0';
 #endif
     lcd.print(lcd_status_message);
 }
