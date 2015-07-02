@@ -501,6 +501,7 @@ static void lcd_implementation_status_screen()
 
     //Status message line on the last line
     lcd.setCursor(0, LCD_HEIGHT - 1);
+    uint8_t n = LCD_WIDTH;
 # if LCD_WIDTH > 19 && defined(FAN_PIN) && FAN_PIN > -1 && defined(DISPLAY_FAN)
     // Display fan on the first 6 position of the status line
     lcd.print('F');
@@ -508,8 +509,12 @@ static void lcd_implementation_status_screen()
     lcd_printPGM(PSTR("% "));
     // Truncate status message to 14 chars to avoid LCD wrap
     lcd_status_message[14] = '\0';
+    n -= 6;
 #endif
     lcd.print(lcd_status_message);
+    n -= strlen(lcd_status_message);
+    while(n--)
+        lcd.print(' ');
 }
 static void lcd_implementation_drawmenu_generic(uint8_t row, const char* pstr, char pre_char, char post_char)
 {
