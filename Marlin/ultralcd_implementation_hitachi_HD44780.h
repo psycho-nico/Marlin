@@ -746,7 +746,7 @@ static void lcd_implementation_quick_feedback()
       delay(3);
     }
     #else
-    for(int8_t i=0;i<(LCD_FEEDBACK_FREQUENCY_DURATION_MS / (1000 / LCD_FEEDBACK_FREQUENCY_HZ));i++)
+    for(int8_t i=0;i<(LCD_FEEDBACK_FREQUENCY_DURATION_MS * LCD_FEEDBACK_FREQUENCY_HZ / 1000);i++)
     {
       WRITE(BEEPER,HIGH);
       delayMicroseconds(1000000 / LCD_FEEDBACK_FREQUENCY_HZ / 2);
