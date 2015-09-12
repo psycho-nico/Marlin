@@ -1340,8 +1340,13 @@
     #define LCD_PINS_D7 6
 
     //buttons are directly attached
-    #define BTN_EN1 40
-    #define BTN_EN2 42
+    #ifndef REVERSE_ENCODER
+        #define BTN_EN1 40
+        #define BTN_EN2 42
+    #else
+        #define BTN_EN1 42
+        #define BTN_EN2 40
+    #endif
     #define BTN_ENC 19  //the click
 
     #define SDCARDDETECT 38
