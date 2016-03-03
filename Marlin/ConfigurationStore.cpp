@@ -83,9 +83,9 @@ void Config_StoreSettings()
     EEPROM_WRITE_VAR(i,Ki);
     EEPROM_WRITE_VAR(i,Kd);
   #else
-		float dummy = 3000.0f;
+    float dummy = 3000.0f;
     EEPROM_WRITE_VAR(i,dummy);
-		dummy = 0.0f;
+    dummy = 0.0f;
     EEPROM_WRITE_VAR(i,dummy);
     EEPROM_WRITE_VAR(i,dummy);
   #endif
@@ -163,14 +163,14 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR("  M666 X",endstop_adj[0] );
     SERIAL_ECHOPAIR(" Y" ,endstop_adj[1] );
     SERIAL_ECHOPAIR(" Z" ,endstop_adj[2] );
-	SERIAL_ECHOLN("");
-	SERIAL_ECHO_START;
-	SERIAL_ECHOLNPGM("Delta settings: L=delta_diagonal_rod, R=delta_radius, S=delta_segments_per_second");
-	SERIAL_ECHO_START;
-	SERIAL_ECHOPAIR("  M665 L",delta_diagonal_rod );
-	SERIAL_ECHOPAIR(" R" ,delta_radius );
-	SERIAL_ECHOPAIR(" S" ,delta_segments_per_second );
-	SERIAL_ECHOLN("");
+    SERIAL_ECHOLN("");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Delta settings: L=delta_diagonal_rod, R=delta_radius, S=delta_segments_per_second");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M665 L",delta_diagonal_rod );
+    SERIAL_ECHOPAIR(" R" ,delta_radius );
+    SERIAL_ECHOPAIR(" S" ,delta_segments_per_second );
+    SERIAL_ECHOLN("");
 #endif
 #ifdef PIDTEMP
     SERIAL_ECHO_START;
@@ -201,7 +201,7 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,max_acceleration_units_per_sq_second);
         
         // steps per sq second need to be updated to agree with the units per sq second (as they are what is used in the planner)
-		reset_acceleration_rates();
+        reset_acceleration_rates();
         
         EEPROM_READ_VAR(i,acceleration);
         EEPROM_READ_VAR(i,retract_acceleration);
@@ -213,10 +213,10 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,max_e_jerk);
         EEPROM_READ_VAR(i,add_homeing);
         #ifdef DELTA
-		EEPROM_READ_VAR(i,endstop_adj);
-		EEPROM_READ_VAR(i,delta_radius);
-		EEPROM_READ_VAR(i,delta_diagonal_rod);
-		EEPROM_READ_VAR(i,delta_segments_per_second);
+        EEPROM_READ_VAR(i,endstop_adj);
+        EEPROM_READ_VAR(i,delta_radius);
+        EEPROM_READ_VAR(i,delta_diagonal_rod);
+        EEPROM_READ_VAR(i,delta_segments_per_second);
         #endif
         #ifndef ULTIPANEL
         int plaPreheatHotendTemp, plaPreheatHPBTemp, plaPreheatFanSpeed;
@@ -232,7 +232,7 @@ void Config_RetrieveSettings()
         #ifndef PIDTEMP
         float Kp,Ki,Kd;
         #endif
-        // do not need to scale PID values as the values in EEPROM are already scaled		
+        // do not need to scale PID values as the values in EEPROM are already scaled
         EEPROM_READ_VAR(i,Kp);
         EEPROM_READ_VAR(i,Ki);
         EEPROM_READ_VAR(i,Kd);
@@ -241,8 +241,8 @@ void Config_RetrieveSettings()
         #endif
         EEPROM_READ_VAR(i,lcd_contrast);
 
-		// Call updatePID (similar to when we have processed M301)
-		updatePID();
+        // Call updatePID (similar to when we have processed M301)
+        updatePID();
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Stored settings retrieved");
     }
@@ -281,11 +281,11 @@ void Config_ResetDefault()
     max_e_jerk=DEFAULT_EJERK;
     add_homeing[0] = add_homeing[1] = add_homeing[2] = 0;
 #ifdef DELTA
-	endstop_adj[0] = endstop_adj[1] = endstop_adj[2] = 0;
-	delta_radius= DELTA_RADIUS;
-	delta_diagonal_rod= DELTA_DIAGONAL_ROD;
-	delta_segments_per_second= DELTA_SEGMENTS_PER_SECOND;
-	recalc_delta_settings(delta_radius, delta_diagonal_rod);
+    endstop_adj[0] = endstop_adj[1] = endstop_adj[2] = 0;
+    delta_radius= DELTA_RADIUS;
+    delta_diagonal_rod= DELTA_DIAGONAL_ROD;
+    delta_segments_per_second= DELTA_SEGMENTS_PER_SECOND;
+    recalc_delta_settings(delta_radius, delta_diagonal_rod);
 #endif
 #ifdef ULTIPANEL
     plaPreheatHotendTemp = PLA_PREHEAT_HOTEND_TEMP;
