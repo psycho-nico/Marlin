@@ -2958,13 +2958,13 @@ void process_commands()
         if(code_seen('S')) for(int i=0;i<=4;i++) digipot_current(i,code_value());
       #endif
       #ifdef MOTOR_CURRENT_PWM_XY_PIN
-        if(code_seen('X')) digipot_current(0, code_value());
+        if(code_seen('X')) digipot_current(0, motor_current_setting[0] = constrain(code_value(), 0, MOTOR_CURRENT_PWM_RANGE));
       #endif
       #ifdef MOTOR_CURRENT_PWM_Z_PIN
-        if(code_seen('Z')) digipot_current(1, code_value());
+        if(code_seen('Z')) digipot_current(1, motor_current_setting[1] = constrain(code_value(), 0, MOTOR_CURRENT_PWM_RANGE));
       #endif
       #ifdef MOTOR_CURRENT_PWM_E_PIN
-        if(code_seen('E')) digipot_current(2, code_value());
+        if(code_seen('E')) digipot_current(2, motor_current_setting[2] = constrain(code_value(), 0, MOTOR_CURRENT_PWM_RANGE));
       #endif
       #ifdef DIGIPOT_I2C
         // this one uses actual amps in floating point

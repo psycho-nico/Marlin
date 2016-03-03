@@ -252,4 +252,9 @@ extern void digipot_i2c_init();
 extern int ledPwm;
 #endif
 
+// Motor current
+#ifdef MOTOR_CURRENT_PWM_XY_PIN
+extern int motor_current_setting[3];
+#endif
+
 #endif

@@ -43,6 +43,13 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 #define EEPROM_VERSION "V10"
 #endif
 
+// EEPROM Extension
+// We don't want to invalidate everything when adding variables, so we introduce
+// a sub-version to default only new fields when we add at the end.
+// Although not bullet proof we use a magic cookie to detect first change.
+#define EEPROM_SUBVERSION 1
+#define EEPROM_MAGIC 0x3d
+
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings() 
 {
@@ -93,6 +100,17 @@ void Config_StoreSettings()
     int lcd_contrast = 32;
   #endif
   EEPROM_WRITE_VAR(i,lcd_contrast);
+  // Start EEPROM Extension
+  uint8_t b = EEPROM_MAGIC;
+  EEPROM_WRITE_VAR(i,b);
+  b = EEPROM_SUBVERSION;
+  EEPROM_WRITE_VAR(i,b);
+  // Sub-version 1: motor current
+  #ifndef MOTOR_CURRENT_PWM_XY_PIN
+    int motor_current_setting[3] = {0, 0, 0};
+  #endif
+  EEPROM_WRITE_VAR(i,motor_current_setting);
+  // End EEPROM Extension
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver2); // validate data
@@ -181,6 +199,16 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR(" D" ,unscalePID_d(Kd));
     SERIAL_ECHOLN(""); 
 #endif
+    // Sub-version 1
+#ifdef MOTOR_CURRENT_PWM_XY_PIN
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Motor current:");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M907 X", (unsigned long)motor_current_setting[0]);
+    SERIAL_ECHOPAIR(" Z", (unsigned long)motor_current_setting[1]);
+    SERIAL_ECHOPAIR(" E", (unsigned long)motor_current_setting[2]);
+    SERIAL_ECHOLN("");
+#endif
 } 
 #endif
 
@@ -243,6 +271,34 @@ void Config_RetrieveSettings()
 
         // Call updatePID (similar to when we have processed M301)
         updatePID();
+
+        // Get sub-version
+        uint8_t sub_version;
+        EEPROM_READ_VAR(i,sub_version);
+        if (sub_version == EEPROM_MAGIC) {
+          // Magic matches, get sub-version
+          EEPROM_READ_VAR(i,sub_version);
+        } else {
+          // Assume first call
+          sub_version = 0;
+        }
+        // Sub-version 1
+        if (sub_version < 1) {
+          #ifdef MOTOR_CURRENT_PWM_XY_PIN
+            int mcs[3] = DEFAULT_PWM_MOTOR_CURRENT;
+            for (uint8_t j = 0; j < 3 ; j++)
+                motor_current_setting[j] = mcs[j];
+          #endif
+        } else {
+          #ifndef MOTOR_CURRENT_PWM_XY_PIN
+            int motor_current_setting[3];
+          #endif
+          EEPROM_READ_VAR(i,motor_current_setting);
+        }
+        #ifdef MOTOR_CURRENT_PWM_XY_PIN
+          digipot_init();
+        #endif
+
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Stored settings retrieved");
     }
@@ -313,6 +369,13 @@ void Config_ResetDefault()
     Kc = DEFAULT_Kc;
 #endif//PID_ADD_EXTRUSION_RATE
 #endif//PIDTEMP
+
+#ifdef MOTOR_CURRENT_PWM_XY_PIN
+    int mcs[3] = DEFAULT_PWM_MOTOR_CURRENT;
+    for (uint8_t j = 0; j < 3 ; j++)
+      motor_current_setting[j] = mcs[j];
+    digipot_init();
+#endif
 
 SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
