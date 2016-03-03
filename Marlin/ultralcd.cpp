@@ -63,6 +63,10 @@ static void lcd_control_temperature_menu();
 static void lcd_control_temperature_preheat_pla_settings_menu();
 static void lcd_control_temperature_preheat_abs_settings_menu();
 static void lcd_control_motion_menu();
+#ifdef MOTOR_CURRENT_PWM_XY_PIN
+static void lcd_control_current_menu();
+static void reset_motor_current();
+#endif
 #ifdef DOGLCD
 static void lcd_set_contrast();
 #endif
@@ -81,6 +85,7 @@ static void menu_action_sdfile(const char* filename, char* longFilename);
 static void menu_action_sddirectory(const char* filename, char* longFilename);
 static void menu_action_setting_edit_bool(const char* pstr, bool* ptr);
 static void menu_action_setting_edit_int3(const char* pstr, int* ptr, int minValue, int maxValue);
+static void menu_action_setting_edit_int4(const char* pstr, int* ptr, int minValue, int maxValue);
 static void menu_action_setting_edit_float3(const char* pstr, float* ptr, float minValue, float maxValue);
 static void menu_action_setting_edit_float32(const char* pstr, float* ptr, float minValue, float maxValue);
 static void menu_action_setting_edit_float5(const char* pstr, float* ptr, float minValue, float maxValue);
@@ -89,6 +94,7 @@ static void menu_action_setting_edit_float52(const char* pstr, float* ptr, float
 static void menu_action_setting_edit_long5(const char* pstr, unsigned long* ptr, unsigned long minValue, unsigned long maxValue);
 static void menu_action_setting_edit_callback_bool(const char* pstr, bool* ptr, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_int3(const char* pstr, int* ptr, int minValue, int maxValue, menuFunc_t callbackFunc);
+static void menu_action_setting_edit_callback_int4(const char* pstr, int* ptr, int minValue, int maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float3(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float32(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float5(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
@@ -810,6 +816,9 @@ static void lcd_control_menu()
     MENU_ITEM(back, MSG_MAIN, lcd_main_menu);
     MENU_ITEM(submenu, MSG_TEMPERATURE, lcd_control_temperature_menu);
     MENU_ITEM(submenu, MSG_MOTION, lcd_control_motion_menu);
+#ifdef MOTOR_CURRENT_PWM_XY_PIN
+    MENU_ITEM(submenu, MSG_MOTOR_CURRENT, lcd_control_current_menu);
+#endif
 #ifdef DOGLCD
 //    MENU_ITEM_EDIT(int3, MSG_CONTRAST, &lcd_contrast, 0, 63);
     MENU_ITEM(submenu, MSG_CONTRAST, lcd_set_contrast);
@@ -932,6 +941,24 @@ static void lcd_control_motion_menu()
 #endif
     END_MENU();
 }
+
+#ifdef MOTOR_CURRENT_PWM_XY_PIN
+static void lcd_control_current_menu()
+{
+    START_MENU();
+    MENU_ITEM(back, MSG_CONTROL, lcd_control_menu);
+    MENU_ITEM_EDIT_CALLBACK(int4, MSG_CURRENT MSG_XY, &motor_current_setting[0], 100, MOTOR_CURRENT_PWM_RANGE, reset_motor_current);
+    MENU_ITEM_EDIT_CALLBACK(int4, MSG_CURRENT MSG_Z, &motor_current_setting[1], 100, MOTOR_CURRENT_PWM_RANGE, reset_motor_current);
+    MENU_ITEM_EDIT_CALLBACK(int4, MSG_CURRENT MSG_E, &motor_current_setting[2], 100, MOTOR_CURRENT_PWM_RANGE, reset_motor_current);
+    END_MENU();
+}
+
+static void reset_motor_current()
+{
+    for(uint8_t i = 0; i < 3; i++)
+        digipot_current(i, motor_current_setting[i]);
+}
+#endif
 
 #ifdef DOGLCD
 static void lcd_set_contrast()
@@ -1106,6 +1133,7 @@ void lcd_sdcard_menu()
         callbackFunc = callback;\
     }
 menu_edit_type(int, int3, itostr3, 1)
+menu_edit_type(int, int4, itostr4, 0.1)
 menu_edit_type(float, float3, ftostr3, 1)
 menu_edit_type(float, float32, ftostr32, 100)
 menu_edit_type(float, float5, ftostr5, 0.01)

@@ -187,7 +187,10 @@
 	#define MSG_BABYSTEP_Y "Babystep Y"
 	#define MSG_BABYSTEP_Z "Babystep Z"
 	#define MSG_ENDSTOP_ABORT "Endstop abort"
-    #define MSG_LED_PWM "LED Brightness"
+	#define MSG_LED_PWM "LED Brightness"
+	#define MSG_MOTOR_CURRENT "Motors current"
+	#define MSG_CURRENT "Current "
+	#define MSG_XY "xy"
 
 // Serial Console Messages
 
@@ -591,6 +594,9 @@
 	#define MSG_BABYSTEP_Z "Babystep Z"
 	#define MSG_ENDSTOP_ABORT "Butee abandon"
 	#define MSG_LED_PWM "Luminosite LED"
+	#define MSG_MOTOR_CURRENT "Courrant moteurs"
+	#define MSG_CURRENT "Courrant "
+	#define MSG_XY "xy"
 
 // Serial Console Messages
 
