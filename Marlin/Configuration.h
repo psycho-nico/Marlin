@@ -577,6 +577,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 #ifndef NO_ULTIMAKERCONTROLLER  // Kludge do allow alternate controller without editing this file...
 #define ULTIMAKERCONTROLLER //as available from the Ultimaker online store.
 #endif
+//#define DISPLAY_FAN // Display fan % on the Ulticontroller (Shorter message line)
 //#define ULTIPANEL  //the UltiPanel as on Thingiverse
 //#define LCD_FEEDBACK_FREQUENCY_HZ 1000	// this is the tone frequency the buzzer plays when on UI feedback. ie Screen Click
 //#define LCD_FEEDBACK_FREQUENCY_DURATION_MS 100 // the duration the buzzer plays the UI feedback sound. ie Screen Click
