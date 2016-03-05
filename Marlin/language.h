@@ -191,6 +191,7 @@
 	#define MSG_MOTOR_CURRENT "Motors current"
 	#define MSG_CURRENT "Current "
 	#define MSG_XY "xy"
+	#define MSG_ACTION_COMMAND "Serial action"
 
 // Serial Console Messages
 
@@ -597,6 +598,7 @@
 	#define MSG_MOTOR_CURRENT "Courrant moteurs"
 	#define MSG_CURRENT "Courrant "
 	#define MSG_XY "xy"
+	#define MSG_ACTION_COMMAND "Action port serie"
 
 // Serial Console Messages
 

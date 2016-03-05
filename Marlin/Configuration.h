@@ -770,6 +770,10 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 //define BlinkM/CyzRgb Support
 //#define BLINKM
 
+// Implement action:command as described http://reprap.org/wiki/Gcode#Replies_from_the_RepRap_machine_to_the_host_computer
+// This allows to pause/resume print when printing from USB with Pronterface/OctoPrint
+//#define ACTION_COMMAND
+
 /*********************************************************************\
 * R/C SERVO support
 * Sponsored by TrinityLabs, Reworked by codexmas

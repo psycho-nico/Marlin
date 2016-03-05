@@ -73,6 +73,9 @@ static void lcd_set_contrast();
 static void lcd_control_retract_menu();
 static void lcd_control_version_menu();
 static void lcd_sdcard_menu();
+#ifdef ACTION_COMMAND
+static void lcd_action_menu();
+#endif
 
 static void lcd_quick_feedback();//Cause an LCD refresh, and give the user visual or audible feedback that something has happened
 
@@ -307,7 +310,11 @@ static void lcd_main_menu()
 #endif
     }
 #endif
-    END_MENU();
+#ifdef ACTION_COMMAND
+  if (serial_active)
+      MENU_ITEM(submenu, MSG_ACTION_COMMAND, lcd_action_menu);
+#endif
+  END_MENU();
 }
 
 #ifdef SDSUPPORT
@@ -1068,6 +1075,46 @@ void lcd_sdcard_menu()
     }
     END_MENU();
 }
+
+#ifdef ACTION_COMMAND
+static void lcd_action_pause()
+{
+    SERIAL_ACTION_START; 
+    SERIAL_ACTIONNLPGM("pause");
+    LCD_MESSAGEPGM(MSG_USERWAIT);
+    lcd_return_to_status();
+}
+
+void lcd_action_resume()
+{
+    SERIAL_ACTION_START;
+    SERIAL_ACTIONNLPGM("resume");
+    LCD_MESSAGEPGM(MSG_RESUMING);
+    lcd_return_to_status();
+}
+
+void lcd_action_disconnect()
+{
+    SERIAL_ACTION_START;
+    SERIAL_ACTIONNLPGM("disconnect");
+    quickStop();
+    if(SD_FINISHED_STEPPERRELEASE)
+        enquecommand_P(PSTR(SD_FINISHED_RELEASECOMMAND));
+    autotempShutdown();
+    LCD_MESSAGEPGM(MSG_STOPPED);
+    lcd_return_to_status();
+}
+
+static void lcd_action_menu()
+{
+    START_MENU();
+    MENU_ITEM(back, MSG_MAIN, lcd_main_menu);
+    MENU_ITEM(function, MSG_PAUSE_PRINT, lcd_action_pause);
+    MENU_ITEM(function, MSG_RESUME_PRINT, lcd_action_resume);
+    MENU_ITEM(function, MSG_STOP_PRINT, lcd_action_disconnect);
+    END_MENU();
+}
+#endif
 
 #define menu_edit_type(_type, _name, _strFunc, scale) \
     void menu_edit_ ## _name () \

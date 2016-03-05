@@ -68,6 +68,9 @@
 
 const char errormagic[] PROGMEM ="Error:";
 const char echomagic[] PROGMEM ="echo:";
+#ifdef ACTION_COMMAND
+const char actionmagic[] PROGMEM ="// action:";
+#endif
 #define SERIAL_ERROR_START (serialprintPGM(errormagic))
 #define SERIAL_ERROR(x) SERIAL_PROTOCOL(x)
 #define SERIAL_ERRORPGM(x) SERIAL_PROTOCOLPGM(x)
@@ -86,6 +89,13 @@ void serial_echopair_P(const char *s_P, float v);
 void serial_echopair_P(const char *s_P, double v);
 void serial_echopair_P(const char *s_P, unsigned long v);
 
+#ifdef ACTION_COMMAND
+#define SERIAL_ACTION_START (serialprintPGM(actionmagic))
+#define SERIAL_ACTION(x) SERIAL_PROTOCOL(x)
+#define SERIAL_ACTIONPGM(x) SERIAL_PROTOCOLPGM(x)
+#define SERIAL_ACTIONNL(x) SERIAL_PROTOCOLLN(x)
+#define SERIAL_ACTIONNLPGM(x) SERIAL_PROTOCOLLNPGM(x)
+#endif
 
 //Things to write to serial from Program memory. Saves 400 to 2k of RAM.
 FORCE_INLINE void serialprintPGM(const char *str)
@@ -250,6 +260,11 @@ extern void digipot_i2c_init();
 // LED Brightness
 #if defined(LED_PIN) && LED_PIN > -1
 extern int ledPwm;
+#endif
+
+// Serial flag
+#ifdef ACTION_COMMAND
+  extern bool serial_active;
 #endif
 
 // Motor current

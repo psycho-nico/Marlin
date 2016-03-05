@@ -263,6 +263,10 @@ int EtoPPressure=0;
   int ledPwm=0;
 #endif
 
+// Serial flag
+#ifdef ACTION_COMMAND
+  bool serial_active = false;
+#endif
 
 #ifdef DELTA
   float delta[3] = {0.0, 0.0, 0.0};
@@ -1158,6 +1162,13 @@ void process_commands()
   char *starpos = NULL;
 #ifdef ENABLE_AUTO_BED_LEVELING
   float x_tmp, y_tmp, z_tmp, real_z;
+#endif
+#ifdef ACTION_COMMAND // Toggle serial_active once we get a command from the serial interface.
+#ifdef SDSUPPORT
+  if(!card.sdprinting) serial_active = true;
+#else
+  serial_active = true;
+#endif
 #endif
   if(code_seen('G'))
   {
