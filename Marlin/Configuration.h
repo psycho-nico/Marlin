@@ -351,9 +351,15 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 #ifndef INVERT_Y_DIR
   #define INVERT_Y_DIR false    // for Mendel set to true, for Orca set to false
 #endif
-#define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
-#define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
-#define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
+#ifndef INVERT_Z_DIR
+  #define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
+#endif
+#ifndef INVERT_E0_DIR
+  #define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+#endif
+#ifndef INVERT_E1_DIR
+  #define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
+#endif
 #define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
 
 // ENDSTOP SETTINGS:
