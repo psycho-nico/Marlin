@@ -285,6 +285,10 @@ int EtoPPressure=0;
   float delta_segments_per_second= DELTA_SEGMENTS_PER_SECOND;
 #endif					
 
+#ifdef FILAMENT_RUNOUT_SENSOR
+  static bool filrunoutEnqueued = false;
+#endif
+
 //===========================================================================
 //=============================Private Variables=============================
 //===========================================================================
@@ -411,6 +415,15 @@ void setup_killpin()
   #endif
 }
 
+void setup_filrunoutpin() {
+  #ifdef FILAMENT_RUNOUT_SENSOR
+    pinMode(FILRUNOUT_PIN, INPUT);
+    #ifdef ENDSTOPPULLUP_FIL_RUNOUT
+      WRITE(FILRUNOUT_PIN, HIGH);
+    #endif
+  #endif
+}
+
 void setup_photpin()
 {
   #if defined(PHOTOGRAPH_PIN) && PHOTOGRAPH_PIN > -1
@@ -480,6 +493,7 @@ void servo_init()
 void setup()
 {
   setup_killpin();
+  setup_filrunoutpin();
   setup_powerhold();
   MYSERIAL.begin(BAUDRATE);
   SERIAL_PROTOCOLLNPGM("start");
@@ -2911,6 +2925,11 @@ void process_commands()
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move xy back
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move z back
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], feedrate/60, active_extruder); //final untretract
+
+        #ifdef FILAMENT_RUNOUT_SENSOR
+          filrunoutEnqueued = false;
+        #endif
+
     }
     break;
     #endif //FILAMENTCHANGEENABLE
@@ -3445,6 +3464,11 @@ void handle_status_leds(void) {
 
 void manage_inactivity()
 {
+  #ifdef FILAMENT_RUNOUT_SENSOR
+    if (card.sdprinting && !(READ(FILRUNOUT_PIN) ^ FIL_RUNOUT_INVERTING))
+      filrunout();
+  #endif
+
   if( (millis() - previous_millis_cmd) >  max_inactive_time )
     if(max_inactive_time)
       kill();
@@ -3534,6 +3558,18 @@ void kill()
   suicide();
   while(1) { /* Intentionally left empty */ } // Wait for reset
 }
+
+#ifdef FILAMENT_RUNOUT_SENSOR
+
+  void filrunout() {
+    if (!filrunoutEnqueued) {
+      filrunoutEnqueued = true;
+      enquecommand_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
+      st_synchronize();
+    }
+  }
+
+#endif // FILAMENT_RUNOUT_SENSOR
 
 void Stop()
 {
