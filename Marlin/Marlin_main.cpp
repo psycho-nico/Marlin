@@ -3465,7 +3465,7 @@ void handle_status_leds(void) {
 void manage_inactivity()
 {
   #ifdef FILAMENT_RUNOUT_SENSOR
-    if (card.sdprinting && !(READ(FILRUNOUT_PIN) ^ FIL_RUNOUT_INVERTING))
+    if (IS_SD_PRINTING && !(READ(FILRUNOUT_PIN) ^ FIL_RUNOUT_INVERTING))
       filrunout();
   #endif
 
