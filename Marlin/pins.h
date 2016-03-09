@@ -1319,8 +1319,10 @@
 #define LED_PIN            13
 #define FAN_PIN            7
 #ifdef FILAMENT_RUNOUT_SENSOR
-  // define digital pin 17 (Digital 8 on Exp3)  for the filament runout sensor.
-  #define FILRUNOUT_PIN     17
+  #ifndef FILRUNOUT_PIN
+    // define digital pin 17 (Digital 8 on Exp3)  for the filament runout sensor.
+    #define FILRUNOUT_PIN     17
+  #endif
 #endif
 #ifdef ULTIMAKER_HBK
 #define PS_ON_PIN          -1
@@ -1497,8 +1499,10 @@
 #define LED_PIN            8
 #define FAN_PIN            7
 #ifdef FILAMENT_RUNOUT_SENSOR
-  // define digital pin 26 (Digital PB7 on Exp3)  for the filament runout sensor.
-  #define FILRUNOUT_PIN     26
+  #ifndef FILRUNOUT_PIN
+    // define digital pin 26 (Digital PB7 on Exp3)  for the filament runout sensor.
+    #define FILRUNOUT_PIN     26
+  #endif
 #endif
 #define PS_ON_PIN          -1
 #define KILL_PIN           -1
