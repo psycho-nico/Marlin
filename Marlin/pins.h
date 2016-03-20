@@ -1327,7 +1327,9 @@
 #ifdef ULTIMAKER_HBK
 #define PS_ON_PIN          -1
 #else
-#define PS_ON_PIN          12
+// UMO has this to 12, but as it is not connected on the ultuboard 1.5.X setting back to -1
+// This will cleanup the Ulticontroller menu from an option that does nothing ;)
+#define PS_ON_PIN          -1
 #endif
 #define KILL_PIN           -1
 #define SUICIDE_PIN        54  //PIN that has to be turned on right after start, to keep power flowing.
