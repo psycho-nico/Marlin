@@ -1348,6 +1348,11 @@ void lcd_update()
         if(lcd_oldcardstatus)
         {
             card.initsd();
+            // Edge case: if the machine was booted without SD card, and the
+            // first inserted SD contains auto[n].g file(s), it/they will be
+            // executed after the first print from SD is done!
+            // Set lastnr to -1 to prevent this.
+            card.lastnr = -1;
             LCD_MESSAGEPGM(MSG_SD_INSERTED);
         }
         else
