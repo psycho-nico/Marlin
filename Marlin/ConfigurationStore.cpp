@@ -47,7 +47,7 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 // We don't want to invalidate everything when adding variables, so we introduce
 // a sub-version to default only new fields when we add at the end.
 // Although not bullet proof we use a magic cookie to detect first change.
-#define EEPROM_SUBVERSION 1
+#define EEPROM_SUBVERSION 2
 #define EEPROM_MAGIC 0x3d
 
 #ifdef EEPROM_SETTINGS
@@ -110,6 +110,11 @@ void Config_StoreSettings()
     int motor_current_setting[3] = {0, 0, 0};
   #endif
   EEPROM_WRITE_VAR(i,motor_current_setting);
+  // Sub-version 2: led brightness
+  #if !(defined(LED_PIN) && LED_PIN > -1)
+    int ledPwm;
+  #endif
+  EEPROM_WRITE_VAR(i,ledPwm);
   // End EEPROM Extension
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
@@ -209,6 +214,14 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR(" E", (unsigned long)motor_current_setting[2]);
     SERIAL_ECHOLN("");
 #endif
+    // Sub-version 2
+#if defined(LED_PIN) && LED_PIN > -1
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Led brightness:");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M42 ", (unsigned long)ledPwm);
+    SERIAL_ECHOLN("");
+#endif
 } 
 #endif
 
@@ -298,6 +311,24 @@ void Config_RetrieveSettings()
         #ifdef MOTOR_CURRENT_PWM_XY_PIN
           digipot_init();
         #endif
+        // Sub-version 2
+        if (sub_version < 2) {
+          #if defined(LED_PIN) && LED_PIN > -1
+            ledPwm=0;
+          #endif
+        } else {
+          #if !(defined(LED_PIN) && LED_PIN > -1)
+            int ledPwm;
+          #endif
+          EEPROM_READ_VAR(i,ledPwm);
+        }
+        #if defined(LED_PIN) && LED_PIN > -1
+          if (ledInit) {
+            // Only setup led if we passed the init
+            pinMode(LED_PIN, OUTPUT);
+            analogWrite(LED_PIN, ledPwm);
+          }
+        #endif
 
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Stored settings retrieved");
@@ -375,6 +406,11 @@ void Config_ResetDefault()
     for (uint8_t j = 0; j < 3 ; j++)
       motor_current_setting[j] = mcs[j];
     digipot_init();
+#endif
+
+#if defined(LED_PIN) && LED_PIN > -1
+    ledPwm = 0;
+    analogWrite(LED_PIN, 0);
 #endif
 
 SERIAL_ECHO_START;

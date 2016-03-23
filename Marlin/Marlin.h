@@ -264,6 +264,7 @@ extern void digipot_i2c_init();
 // LED Brightness
 #if defined(LED_PIN) && LED_PIN > -1
 extern int ledPwm;
+extern bool ledInit;
 #endif
 
 // Serial flag

@@ -261,6 +261,7 @@ int EtoPPressure=0;
 // LED Brightness
 #if defined(LED_PIN) && LED_PIN > -1
   int ledPwm=0;
+  bool ledInit=false;
 #endif
 
 // Serial flag
@@ -542,7 +543,18 @@ void setup()
   servo_init();
 
   lcd_init();
-  _delay_ms(1000);	// wait 1sec to display the splash screen
+
+  #if defined(LED_PIN) && LED_PIN > -1
+    // Bring led to saved brigtness in 1 sec
+    pinMode(LED_PIN, OUTPUT);
+    for(uint8_t i = 0; i <= 100; i++) {
+      analogWrite(LED_PIN, ledPwm * i / 100);
+      _delay_ms(10);
+    }
+    ledInit = true;
+  #else
+    _delay_ms(1000);	// wait 1sec to display the splash screen
+  #endif
 
   #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
     SET_OUTPUT(CONTROLLERFAN_PIN); //Set pin used for driver cooling fan
