@@ -3574,7 +3574,9 @@ void kill()
 #ifdef FILAMENT_RUNOUT_SENSOR
 
   void filrunout() {
-    if (!filrunoutEnqueued) {
+    if (!filrunoutEnqueued && buflen < BUFSIZE) {
+      // We check the enqueue buffer as enquecommand silently drops
+      // commands when buffer if full!
       filrunoutEnqueued = true;
       enquecommand_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
       st_synchronize();
