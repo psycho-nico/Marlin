@@ -1318,10 +1318,18 @@
 #define SDSS               53
 #define LED_PIN            13
 #define FAN_PIN            7
+#ifdef FILAMENT_RUNOUT_SENSOR
+  #ifndef FILRUNOUT_PIN
+    // define digital pin 8 (Digital 8 on Exp3)  for the filament runout sensor.
+    #define FILRUNOUT_PIN     8
+  #endif
+#endif
 #ifdef ULTIMAKER_HBK
 #define PS_ON_PIN          -1
 #else
-#define PS_ON_PIN          12
+// UMO has this to 12, but as it is not connected on the ultuboard 1.5.X setting back to -1
+// This will cleanup the Ulticontroller menu from an option that does nothing ;)
+#define PS_ON_PIN          -1
 #endif
 #define KILL_PIN           -1
 #define SUICIDE_PIN        54  //PIN that has to be turned on right after start, to keep power flowing.
@@ -1492,6 +1500,12 @@
 #define SDSS               53
 #define LED_PIN            8
 #define FAN_PIN            7
+#ifdef FILAMENT_RUNOUT_SENSOR
+  #ifndef FILRUNOUT_PIN
+    // define digital pin 13 (Digital PB7 on Exp3)  for the filament runout sensor.
+    #define FILRUNOUT_PIN     13
+  #endif
+#endif
 #define PS_ON_PIN          -1
 #define KILL_PIN           -1
 #define SUICIDE_PIN        -1  //PIN that has to be turned on right after start, to keep power flowing.

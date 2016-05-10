@@ -261,8 +261,13 @@ int EtoPPressure=0;
 // LED Brightness
 #if defined(LED_PIN) && LED_PIN > -1
   int ledPwm=0;
+  bool ledInit=false;
 #endif
 
+// Serial flag
+#ifdef ACTION_COMMAND
+  bool serial_active = false;
+#endif
 
 #ifdef DELTA
   float delta[3] = {0.0, 0.0, 0.0};
@@ -280,6 +285,10 @@ int EtoPPressure=0;
   float delta_diagonal_rod_2= sq(delta_diagonal_rod);
   float delta_segments_per_second= DELTA_SEGMENTS_PER_SECOND;
 #endif					
+
+#ifdef FILAMENT_RUNOUT_SENSOR
+  static bool filrunoutEnqueued = false;
+#endif
 
 //===========================================================================
 //=============================Private Variables=============================
@@ -407,6 +416,15 @@ void setup_killpin()
   #endif
 }
 
+void setup_filrunoutpin() {
+  #ifdef FILAMENT_RUNOUT_SENSOR
+    pinMode(FILRUNOUT_PIN, INPUT);
+    #ifdef ENDSTOPPULLUP_FIL_RUNOUT
+      WRITE(FILRUNOUT_PIN, HIGH);
+    #endif
+  #endif
+}
+
 void setup_photpin()
 {
   #if defined(PHOTOGRAPH_PIN) && PHOTOGRAPH_PIN > -1
@@ -476,6 +494,7 @@ void servo_init()
 void setup()
 {
   setup_killpin();
+  setup_filrunoutpin();
   setup_powerhold();
   MYSERIAL.begin(BAUDRATE);
   SERIAL_PROTOCOLLNPGM("start");
@@ -524,7 +543,18 @@ void setup()
   servo_init();
 
   lcd_init();
-  _delay_ms(1000);	// wait 1sec to display the splash screen
+
+  #if defined(LED_PIN) && LED_PIN > -1
+    // Bring led to saved brigtness in 1 sec
+    pinMode(LED_PIN, OUTPUT);
+    for(uint8_t i = 0; i <= 100; i++) {
+      analogWrite(LED_PIN, ledPwm * i / 100);
+      _delay_ms(10);
+    }
+    ledInit = true;
+  #else
+    _delay_ms(1000);	// wait 1sec to display the splash screen
+  #endif
 
   #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
     SET_OUTPUT(CONTROLLERFAN_PIN); //Set pin used for driver cooling fan
@@ -1158,6 +1188,13 @@ void process_commands()
   char *starpos = NULL;
 #ifdef ENABLE_AUTO_BED_LEVELING
   float x_tmp, y_tmp, z_tmp, real_z;
+#endif
+#ifdef ACTION_COMMAND // Toggle serial_active once we get a command from the serial interface.
+#ifdef SDSUPPORT
+  if(!card.sdprinting) serial_active = true;
+#else
+  serial_active = true;
+#endif
 #endif
   if(code_seen('G'))
   {
@@ -2900,6 +2937,11 @@ void process_commands()
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move xy back
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move z back
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], feedrate/60, active_extruder); //final untretract
+
+        #ifdef FILAMENT_RUNOUT_SENSOR
+          filrunoutEnqueued = false;
+        #endif
+
     }
     break;
     #endif //FILAMENTCHANGEENABLE
@@ -2958,13 +3000,13 @@ void process_commands()
         if(code_seen('S')) for(int i=0;i<=4;i++) digipot_current(i,code_value());
       #endif
       #ifdef MOTOR_CURRENT_PWM_XY_PIN
-        if(code_seen('X')) digipot_current(0, code_value());
+        if(code_seen('X')) digipot_current(0, motor_current_setting[0] = constrain(code_value(), 0, MOTOR_CURRENT_PWM_RANGE));
       #endif
       #ifdef MOTOR_CURRENT_PWM_Z_PIN
-        if(code_seen('Z')) digipot_current(1, code_value());
+        if(code_seen('Z')) digipot_current(1, motor_current_setting[1] = constrain(code_value(), 0, MOTOR_CURRENT_PWM_RANGE));
       #endif
       #ifdef MOTOR_CURRENT_PWM_E_PIN
-        if(code_seen('E')) digipot_current(2, code_value());
+        if(code_seen('E')) digipot_current(2, motor_current_setting[2] = constrain(code_value(), 0, MOTOR_CURRENT_PWM_RANGE));
       #endif
       #ifdef DIGIPOT_I2C
         // this one uses actual amps in floating point
@@ -3434,6 +3476,11 @@ void handle_status_leds(void) {
 
 void manage_inactivity()
 {
+  #ifdef FILAMENT_RUNOUT_SENSOR
+    if (IS_SD_PRINTING && !(READ(FILRUNOUT_PIN) ^ FIL_RUNOUT_INVERTING))
+      filrunout();
+  #endif
+
   if( (millis() - previous_millis_cmd) >  max_inactive_time )
     if(max_inactive_time)
       kill();
@@ -3523,6 +3570,20 @@ void kill()
   suicide();
   while(1) { /* Intentionally left empty */ } // Wait for reset
 }
+
+#ifdef FILAMENT_RUNOUT_SENSOR
+
+  void filrunout() {
+    if (!filrunoutEnqueued && buflen < BUFSIZE) {
+      // We check the enqueue buffer as enquecommand silently drops
+      // commands when buffer if full!
+      filrunoutEnqueued = true;
+      enquecommand_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
+      st_synchronize();
+    }
+  }
+
+#endif // FILAMENT_RUNOUT_SENSOR
 
 void Stop()
 {

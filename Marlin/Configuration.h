@@ -351,9 +351,15 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 #ifndef INVERT_Y_DIR
   #define INVERT_Y_DIR false    // for Mendel set to true, for Orca set to false
 #endif
-#define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
-#define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
-#define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
+#ifndef INVERT_Z_DIR
+  #define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
+#endif
+#ifndef INVERT_E0_DIR
+  #define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+#endif
+#ifndef INVERT_E1_DIR
+  #define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
+#endif
 #define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
 
 // ENDSTOP SETTINGS:
@@ -390,6 +396,25 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
 #define Y_MAX_LENGTH (Y_MAX_POS - Y_MIN_POS)
 #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
+
+//===========================================================================
+//========================= Filament Runout Sensor ==========================
+//===========================================================================
+//#define FILAMENT_RUNOUT_SENSOR // Uncomment for defining a filament runout sensor such as a mechanical or opto endstop to check the existence of filament
+                                 // In RAMPS uses servo pin 2. Can be changed in pins file. For other boards pin definition should be made.
+                                 // It is assumed that when logic high = filament available
+                                 //                    when logic  low = filament ran out
+#ifdef FILAMENT_RUNOUT_SENSOR
+  //#define FIL_RUNOUT_INVERT
+  #ifdef FIL_RUNOUT_INVERT
+    const bool FIL_RUNOUT_INVERTING = true;  // Should be uncommented and true or false should assigned
+  #else
+    const bool FIL_RUNOUT_INVERTING = false;  // Should be uncommented and true or false should assigned
+  #endif
+  //#define ENDSTOPPULLUP_FIL_RUNOUT // Uncomment to use internal pullup for filament runout pins if the sensor is defined.
+  #define FILAMENT_RUNOUT_SCRIPT "M600"
+#endif
+
 //============================= Bed Auto Leveling ===========================
 
 //#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
@@ -577,6 +602,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 #ifndef NO_ULTIMAKERCONTROLLER  // Kludge do allow alternate controller without editing this file...
 #define ULTIMAKERCONTROLLER //as available from the Ultimaker online store.
 #endif
+//#define DISPLAY_FAN // Display fan % on the Ulticontroller (Shorter message line)
 //#define ULTIPANEL  //the UltiPanel as on Thingiverse
 //#define LCD_FEEDBACK_FREQUENCY_HZ 1000	// this is the tone frequency the buzzer plays when on UI feedback. ie Screen Click
 //#define LCD_FEEDBACK_FREQUENCY_DURATION_MS 100 // the duration the buzzer plays the UI feedback sound. ie Screen Click
@@ -768,6 +794,10 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
 //define BlinkM/CyzRgb Support
 //#define BLINKM
+
+// Implement action:command as described http://reprap.org/wiki/Gcode#Replies_from_the_RepRap_machine_to_the_host_computer
+// This allows to pause/resume print when printing from USB with Pronterface/OctoPrint
+//#define ACTION_COMMAND
 
 /*********************************************************************\
 * R/C SERVO support

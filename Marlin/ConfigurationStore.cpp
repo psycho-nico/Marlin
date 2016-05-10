@@ -43,6 +43,13 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 #define EEPROM_VERSION "V10"
 #endif
 
+// EEPROM Extension
+// We don't want to invalidate everything when adding variables, so we introduce
+// a sub-version to default only new fields when we add at the end.
+// Although not bullet proof we use a magic cookie to detect first change.
+#define EEPROM_SUBVERSION 2
+#define EEPROM_MAGIC 0x3d
+
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings() 
 {
@@ -83,9 +90,9 @@ void Config_StoreSettings()
     EEPROM_WRITE_VAR(i,Ki);
     EEPROM_WRITE_VAR(i,Kd);
   #else
-		float dummy = 3000.0f;
+    float dummy = 3000.0f;
     EEPROM_WRITE_VAR(i,dummy);
-		dummy = 0.0f;
+    dummy = 0.0f;
     EEPROM_WRITE_VAR(i,dummy);
     EEPROM_WRITE_VAR(i,dummy);
   #endif
@@ -93,6 +100,22 @@ void Config_StoreSettings()
     int lcd_contrast = 32;
   #endif
   EEPROM_WRITE_VAR(i,lcd_contrast);
+  // Start EEPROM Extension
+  uint8_t b = EEPROM_MAGIC;
+  EEPROM_WRITE_VAR(i,b);
+  b = EEPROM_SUBVERSION;
+  EEPROM_WRITE_VAR(i,b);
+  // Sub-version 1: motor current
+  #ifndef MOTOR_CURRENT_PWM_XY_PIN
+    int motor_current_setting[3] = {0, 0, 0};
+  #endif
+  EEPROM_WRITE_VAR(i,motor_current_setting);
+  // Sub-version 2: led brightness
+  #if !(defined(LED_PIN) && LED_PIN > -1)
+    int ledPwm;
+  #endif
+  EEPROM_WRITE_VAR(i,ledPwm);
+  // End EEPROM Extension
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver2); // validate data
@@ -163,14 +186,14 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR("  M666 X",endstop_adj[0] );
     SERIAL_ECHOPAIR(" Y" ,endstop_adj[1] );
     SERIAL_ECHOPAIR(" Z" ,endstop_adj[2] );
-	SERIAL_ECHOLN("");
-	SERIAL_ECHO_START;
-	SERIAL_ECHOLNPGM("Delta settings: L=delta_diagonal_rod, R=delta_radius, S=delta_segments_per_second");
-	SERIAL_ECHO_START;
-	SERIAL_ECHOPAIR("  M665 L",delta_diagonal_rod );
-	SERIAL_ECHOPAIR(" R" ,delta_radius );
-	SERIAL_ECHOPAIR(" S" ,delta_segments_per_second );
-	SERIAL_ECHOLN("");
+    SERIAL_ECHOLN("");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Delta settings: L=delta_diagonal_rod, R=delta_radius, S=delta_segments_per_second");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M665 L",delta_diagonal_rod );
+    SERIAL_ECHOPAIR(" R" ,delta_radius );
+    SERIAL_ECHOPAIR(" S" ,delta_segments_per_second );
+    SERIAL_ECHOLN("");
 #endif
 #ifdef PIDTEMP
     SERIAL_ECHO_START;
@@ -180,6 +203,24 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR(" I" ,unscalePID_i(Ki)); 
     SERIAL_ECHOPAIR(" D" ,unscalePID_d(Kd));
     SERIAL_ECHOLN(""); 
+#endif
+    // Sub-version 1
+#ifdef MOTOR_CURRENT_PWM_XY_PIN
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Motor current:");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M907 X", (unsigned long)motor_current_setting[0]);
+    SERIAL_ECHOPAIR(" Z", (unsigned long)motor_current_setting[1]);
+    SERIAL_ECHOPAIR(" E", (unsigned long)motor_current_setting[2]);
+    SERIAL_ECHOLN("");
+#endif
+    // Sub-version 2
+#if defined(LED_PIN) && LED_PIN > -1
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Led brightness:");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M42 ", (unsigned long)ledPwm);
+    SERIAL_ECHOLN("");
 #endif
 } 
 #endif
@@ -201,7 +242,7 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,max_acceleration_units_per_sq_second);
         
         // steps per sq second need to be updated to agree with the units per sq second (as they are what is used in the planner)
-		reset_acceleration_rates();
+        reset_acceleration_rates();
         
         EEPROM_READ_VAR(i,acceleration);
         EEPROM_READ_VAR(i,retract_acceleration);
@@ -213,10 +254,10 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,max_e_jerk);
         EEPROM_READ_VAR(i,add_homeing);
         #ifdef DELTA
-		EEPROM_READ_VAR(i,endstop_adj);
-		EEPROM_READ_VAR(i,delta_radius);
-		EEPROM_READ_VAR(i,delta_diagonal_rod);
-		EEPROM_READ_VAR(i,delta_segments_per_second);
+        EEPROM_READ_VAR(i,endstop_adj);
+        EEPROM_READ_VAR(i,delta_radius);
+        EEPROM_READ_VAR(i,delta_diagonal_rod);
+        EEPROM_READ_VAR(i,delta_segments_per_second);
         #endif
         #ifndef ULTIPANEL
         int plaPreheatHotendTemp, plaPreheatHPBTemp, plaPreheatFanSpeed;
@@ -232,7 +273,7 @@ void Config_RetrieveSettings()
         #ifndef PIDTEMP
         float Kp,Ki,Kd;
         #endif
-        // do not need to scale PID values as the values in EEPROM are already scaled		
+        // do not need to scale PID values as the values in EEPROM are already scaled
         EEPROM_READ_VAR(i,Kp);
         EEPROM_READ_VAR(i,Ki);
         EEPROM_READ_VAR(i,Kd);
@@ -241,8 +282,54 @@ void Config_RetrieveSettings()
         #endif
         EEPROM_READ_VAR(i,lcd_contrast);
 
-		// Call updatePID (similar to when we have processed M301)
-		updatePID();
+        // Call updatePID (similar to when we have processed M301)
+        updatePID();
+
+        // Get sub-version
+        uint8_t sub_version;
+        EEPROM_READ_VAR(i,sub_version);
+        if (sub_version == EEPROM_MAGIC) {
+          // Magic matches, get sub-version
+          EEPROM_READ_VAR(i,sub_version);
+        } else {
+          // Assume first call
+          sub_version = 0;
+        }
+        // Sub-version 1
+        if (sub_version < 1) {
+          #ifdef MOTOR_CURRENT_PWM_XY_PIN
+            int mcs[3] = DEFAULT_PWM_MOTOR_CURRENT;
+            for (uint8_t j = 0; j < 3 ; j++)
+                motor_current_setting[j] = mcs[j];
+          #endif
+        } else {
+          #ifndef MOTOR_CURRENT_PWM_XY_PIN
+            int motor_current_setting[3];
+          #endif
+          EEPROM_READ_VAR(i,motor_current_setting);
+        }
+        #ifdef MOTOR_CURRENT_PWM_XY_PIN
+          digipot_init();
+        #endif
+        // Sub-version 2
+        if (sub_version < 2) {
+          #if defined(LED_PIN) && LED_PIN > -1
+            ledPwm=0;
+          #endif
+        } else {
+          #if !(defined(LED_PIN) && LED_PIN > -1)
+            int ledPwm;
+          #endif
+          EEPROM_READ_VAR(i,ledPwm);
+        }
+        #if defined(LED_PIN) && LED_PIN > -1
+          if (ledInit) {
+            // Only setup led if we passed the init
+            pinMode(LED_PIN, OUTPUT);
+            analogWrite(LED_PIN, ledPwm);
+          }
+        #endif
+
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Stored settings retrieved");
     }
@@ -281,11 +368,11 @@ void Config_ResetDefault()
     max_e_jerk=DEFAULT_EJERK;
     add_homeing[0] = add_homeing[1] = add_homeing[2] = 0;
 #ifdef DELTA
-	endstop_adj[0] = endstop_adj[1] = endstop_adj[2] = 0;
-	delta_radius= DELTA_RADIUS;
-	delta_diagonal_rod= DELTA_DIAGONAL_ROD;
-	delta_segments_per_second= DELTA_SEGMENTS_PER_SECOND;
-	recalc_delta_settings(delta_radius, delta_diagonal_rod);
+    endstop_adj[0] = endstop_adj[1] = endstop_adj[2] = 0;
+    delta_radius= DELTA_RADIUS;
+    delta_diagonal_rod= DELTA_DIAGONAL_ROD;
+    delta_segments_per_second= DELTA_SEGMENTS_PER_SECOND;
+    recalc_delta_settings(delta_radius, delta_diagonal_rod);
 #endif
 #ifdef ULTIPANEL
     plaPreheatHotendTemp = PLA_PREHEAT_HOTEND_TEMP;
@@ -313,6 +400,18 @@ void Config_ResetDefault()
     Kc = DEFAULT_Kc;
 #endif//PID_ADD_EXTRUSION_RATE
 #endif//PIDTEMP
+
+#ifdef MOTOR_CURRENT_PWM_XY_PIN
+    int mcs[3] = DEFAULT_PWM_MOTOR_CURRENT;
+    for (uint8_t j = 0; j < 3 ; j++)
+      motor_current_setting[j] = mcs[j];
+    digipot_init();
+#endif
+
+#if defined(LED_PIN) && LED_PIN > -1
+    ledPwm = 0;
+    analogWrite(LED_PIN, 0);
+#endif
 
 SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
