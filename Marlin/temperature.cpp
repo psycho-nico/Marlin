@@ -349,11 +349,22 @@ int getHeaterPower(int heater) {
 
 void setExtruderAutoFanState(int pin, bool state)
 {
-  unsigned char newFanSpeed = (state != 0) ? EXTRUDER_AUTO_FAN_SPEED : 0;
-  // this idiom allows both digital and PWM fan outputs (see M42 handling).
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, newFanSpeed);
-  analogWrite(pin, newFanSpeed);
+  if (pin == 255) {
+    // Hack for Ultiboard 2.1.4+, hot-end fan is on pin PJ6, not mapped on Arduino
+    // We do direct pin access, no PWM
+    DDRJ |= _BV(6);
+    if (state) {
+      PORTJ |= _BV(6);
+    } else {
+      PORTJ &=~_BV(6);
+    }
+  } else {
+    unsigned char newFanSpeed = (state != 0) ? EXTRUDER_AUTO_FAN_SPEED : 0;
+    // this idiom allows both digital and PWM fan outputs (see M42 handling).
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, newFanSpeed);
+    analogWrite(pin, newFanSpeed);
+  }
 }
 
 void checkExtruderAutoFans()
