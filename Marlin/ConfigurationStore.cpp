@@ -351,7 +351,7 @@ void Config_RetrieveSettings()
         // Sub-version 3
         if (sub_version >= 3) {
           #ifndef PIDTEMPBED
-            float Kp,Ki,Kd;
+            float bedKp,bedKi,bedKd;
           #endif
           // do not need to scale PID values as the values in EEPROM are already scaled
           EEPROM_READ_VAR(i,bedKp);
