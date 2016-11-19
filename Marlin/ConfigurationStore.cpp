@@ -47,7 +47,7 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 // We don't want to invalidate everything when adding variables, so we introduce
 // a sub-version to default only new fields when we add at the end.
 // Although not bullet proof we use a magic cookie to detect first change.
-#define EEPROM_SUBVERSION 2
+#define EEPROM_SUBVERSION 3
 #define EEPROM_MAGIC 0x3d
 
 #ifdef EEPROM_SETTINGS
@@ -115,6 +115,18 @@ void Config_StoreSettings()
     int ledPwm;
   #endif
   EEPROM_WRITE_VAR(i,ledPwm);
+  // Sub-version 3: Bed PID
+  #ifdef PIDTEMPBED
+    EEPROM_WRITE_VAR(i,bedKp);
+    EEPROM_WRITE_VAR(i,bedKi);
+    EEPROM_WRITE_VAR(i,bedKd);
+  #else
+    float dummy = 3000.0f;
+    EEPROM_WRITE_VAR(i,dummy);
+    dummy = 0.0f;
+    EEPROM_WRITE_VAR(i,dummy);
+    EEPROM_WRITE_VAR(i,dummy);
+  #endif
   // End EEPROM Extension
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
@@ -222,6 +234,16 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR("  M42 ", (unsigned long)ledPwm);
     SERIAL_ECHOLN("");
 #endif
+    // Sub-version 3
+#ifdef PIDTEMPBED
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Bed PID settings:");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("   M304 P",bedKp);
+    SERIAL_ECHOPAIR(" I" ,unscalePID_i(bedKi));
+    SERIAL_ECHOPAIR(" D" ,unscalePID_d(bedKd));
+    SERIAL_ECHOLN("");
+#endif
 } 
 #endif
 
@@ -282,9 +304,6 @@ void Config_RetrieveSettings()
         #endif
         EEPROM_READ_VAR(i,lcd_contrast);
 
-        // Call updatePID (similar to when we have processed M301)
-        updatePID();
-
         // Get sub-version
         uint8_t sub_version;
         EEPROM_READ_VAR(i,sub_version);
@@ -329,6 +348,27 @@ void Config_RetrieveSettings()
             analogWrite(LED_PIN, ledPwm);
           }
         #endif
+        // Sub-version 3
+        if (sub_version >= 3) {
+          #ifndef PIDTEMPBED
+            float bedKp,bedKi,bedKd;
+          #endif
+          // do not need to scale PID values as the values in EEPROM are already scaled
+          EEPROM_READ_VAR(i,bedKp);
+          EEPROM_READ_VAR(i,bedKi);
+          EEPROM_READ_VAR(i,bedKd);
+        }
+        #ifdef PIDTEMPBED
+          if (sub_version < 3 || (bedKp == 3000.0f && bedKi == 0.0f)) {
+            // If we have no saved values or if saved values are stubs, use default
+            bedKp=DEFAULT_bedKp;
+            bedKi=(DEFAULT_bedKi*PID_dT);
+            bedKd=(DEFAULT_bedKd/PID_dT);
+          }
+        #endif
+
+        // Call updatePID (similar to when we have processed M301)
+        updatePID();
 
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Stored settings retrieved");
@@ -412,6 +452,13 @@ void Config_ResetDefault()
     ledPwm = 0;
     analogWrite(LED_PIN, 0);
 #endif
+
+#ifdef PIDTEMPBED
+    bedKp = DEFAULT_bedKp;
+    bedKi = scalePID_i(DEFAULT_bedKi);
+    bedKd = scalePID_d(DEFAULT_bedKd);
+    updatePID();
+#endif //PIDTEMPBED
 
 SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");

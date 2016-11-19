@@ -42,6 +42,10 @@ char lcd_status_message[LCD_WIDTH+1] = WELCOME_MSG;
 
 void copy_and_scalePID_i();
 void copy_and_scalePID_d();
+#ifdef PIDTEMPBED
+void copy_and_scalePID_bed_i();
+void copy_and_scalePID_bed_d();
+#endif
 
 #if defined(LED_PIN) && LED_PIN > -1
 void set_ledPwm();
@@ -192,6 +196,9 @@ menuFunc_t callbackFunc;
 
 // place-holders for Ki and Kd edits
 float raw_Ki, raw_Kd;
+#ifdef PIDTEMPBED
+float raw_bedKi, raw_bedKd;
+#endif
 
 /* Main status screen. It's up to the implementation specific part to show what is needed. As this is very display dependent */
 static void lcd_status_screen()
@@ -853,6 +860,10 @@ static void lcd_control_temperature_menu()
     raw_Ki = unscalePID_i(Ki);
     raw_Kd = unscalePID_d(Kd);
 #endif
+#ifdef PIDTEMPBED
+    raw_bedKi = unscalePID_i(bedKi);
+    raw_bedKd = unscalePID_d(bedKd);
+#endif
 
     START_MENU();
     MENU_ITEM(back, MSG_CONTROL, lcd_control_menu);
@@ -882,6 +893,11 @@ static void lcd_control_temperature_menu()
     MENU_ITEM_EDIT(float3, MSG_PID_C, &Kc, 1, 9990);
 # endif//PID_ADD_EXTRUSION_RATE
 #endif//PIDTEMP
+#ifdef PIDTEMPBED
+    MENU_ITEM_EDIT(float52, MSG_PIDBED_P, &bedKp, 1, 9990);
+    MENU_ITEM_EDIT_CALLBACK(float52, MSG_PIDBED_I, &raw_bedKi, 0.01, 9990, copy_and_scalePID_bed_i);
+    MENU_ITEM_EDIT_CALLBACK(float52, MSG_PIDBED_D, &raw_bedKd, 1, 9990, copy_and_scalePID_bed_d);
+#endif//PIDTEMPBED
     MENU_ITEM(submenu, MSG_PREHEAT_PLA_SETTINGS, lcd_control_temperature_preheat_pla_settings_menu);
     MENU_ITEM(submenu, MSG_PREHEAT_ABS_SETTINGS, lcd_control_temperature_preheat_abs_settings_menu);
     END_MENU();
@@ -1781,6 +1797,21 @@ void copy_and_scalePID_d()
   updatePID();
 #endif
 }
+
+#ifdef PIDTEMPBED
+// Callback for after editing PID i/d values for the bed
+void copy_and_scalePID_bed_i()
+{
+  bedKi = scalePID_i(raw_bedKi);
+  updatePID();
+}
+
+void copy_and_scalePID_bed_d()
+{
+  bedKd = scalePID_d(raw_bedKd);
+  updatePID();
+}
+#endif
 
 // LED Brightness
 #if defined(LED_PIN) && LED_PIN > -1

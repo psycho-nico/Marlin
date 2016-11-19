@@ -192,6 +192,9 @@
 	#define MSG_CURRENT "Current "
 	#define MSG_XY "xy"
 	#define MSG_ACTION_COMMAND "Serial action"
+	#define MSG_PIDBED_P "Bed PID-P"
+	#define MSG_PIDBED_I "Bed PID-I"
+	#define MSG_PIDBED_D "Bed PID-D"
 
 // Serial Console Messages
 
@@ -599,6 +602,9 @@
 	#define MSG_CURRENT "Courrant "
 	#define MSG_XY "xy"
 	#define MSG_ACTION_COMMAND "Action port serie"
+	#define MSG_PIDBED_P "Lit PID-P"
+	#define MSG_PIDBED_I "Lit PID-I"
+	#define MSG_PIDBED_D "Lid PID-D"
 
 // Serial Console Messages
 
