@@ -47,6 +47,17 @@ float current_temperature_bed = 0.0;
   int redundant_temperature_raw = 0;
   float redundant_temperature = 0.0;
 #endif
+#ifdef TWEAK_TEMP
+int offset_temperature[EXTRUDERS] = { 0 };
+int offset_temperature_bed = 0;
+int ratio_fanSpeed = 100;
+int override_temperature[EXTRUDERS] = { 0 };
+int override_temperature_bed = 0;
+int override_fanSpeed = 0;
+int requested_temperature[EXTRUDERS] = { 0 };
+int requested_temperature_bed = 0;
+int requested_fanSpeed = 0;
+#endif
 #ifdef PIDTEMP
   float Kp=DEFAULT_Kp;
   float Ki=(DEFAULT_Ki*PID_dT);
@@ -1330,5 +1341,52 @@ float unscalePID_d(float d)
 }
 
 #endif //PIDTEMP
+
+#ifdef TWEAK_TEMP
+// Tweak temperature
+// Rules:
+//  0 is never tweaked
+//  override has precedence over offset (we don't do both)
+//  offset limits temperature between min/max temps
+float tweakTempHotend(const float &celsius, uint8_t extruder) {
+    if (celsius < minttemp[extruder])
+        return celsius;
+    if (minttemp[extruder] <= override_temperature[extruder] &&
+        override_temperature[extruder] <= maxttemp[extruder] - 15)
+        return override_temperature[extruder];
+    if (offset_temperature[extruder])
+        return constrain(celsius + offset_temperature[extruder], minttemp[extruder], maxttemp[extruder] - 15);
+    else
+        return celsius;
+};
+
+float tweakTempBed(const float &celsius) {
+#if TEMP_SENSOR_BED != 0
+    if (celsius < BED_MINTEMP)
+        return celsius;
+    if (BED_MINTEMP <= override_temperature_bed && override_temperature_bed <= BED_MAXTEMP - 15)
+        return override_temperature_bed;
+    if (offset_temperature_bed)
+        return constrain(celsius + offset_temperature_bed, BED_MINTEMP, BED_MAXTEMP - 15);
+    else
+        return celsius;
+#else //TEMP_SENSOR_BED != 0
+    return celsius;
+#endif //TEMP_SENSOR_BED != 0
+};
+
+int tweakFanSpeed(const int &speed) {
+    if (speed == 0)
+        return speed;
+    if (override_fanSpeed)
+        return override_fanSpeed;
+    if (ratio_fanSpeed != 100)
+        return constrain(((speed * ratio_fanSpeed) + 49) / 100, 0, 255);
+    else
+        return speed;
+};
+#endif //TWEAK_TEMP
+
+
 
 

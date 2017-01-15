@@ -44,7 +44,17 @@ extern float current_temperature_bed;
 #ifdef TEMP_SENSOR_1_AS_REDUNDANT
   extern float redundant_temperature;
 #endif
-
+#ifdef TWEAK_TEMP
+extern int offset_temperature[EXTRUDERS];
+extern int offset_temperature_bed;
+extern int ratio_fanSpeed;
+extern int override_temperature[EXTRUDERS];
+extern int override_temperature_bed;
+extern int override_fanSpeed;
+extern int requested_temperature[EXTRUDERS];
+extern int requested_temperature_bed;
+extern int requested_fanSpeed;
+#endif
 #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
   extern unsigned char soft_pwm_bed;
 #endif
@@ -96,13 +106,34 @@ FORCE_INLINE float degTargetBed() {
   return target_temperature_bed;
 };
 
-FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {  
+#ifndef TWEAK_TEMP
+FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {
   target_temperature[extruder] = celsius;
 };
 
 FORCE_INLINE void setTargetBed(const float &celsius) {  
   target_temperature_bed = celsius;
 };
+#else
+float tweakTempHotend(const float &celsius, uint8_t extruder);
+float tweakTempBed(const float &celsius);
+int tweakFanSpeed(const int &speed);
+
+FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {
+  requested_temperature[extruder] = celsius;
+  target_temperature[extruder] = tweakTempHotend(celsius, extruder);
+};
+
+FORCE_INLINE void setTargetBed(const float &celsius) {
+  requested_temperature_bed = celsius;
+  target_temperature_bed = tweakTempBed(celsius);
+};
+
+FORCE_INLINE void setFanSpeed(const int &speed) {
+  requested_fanSpeed = speed;
+  fanSpeed = tweakFanSpeed(speed);
+};
+#endif
 
 FORCE_INLINE bool isHeatingHotend(uint8_t extruder){  
   return target_temperature[extruder] > current_temperature[extruder];

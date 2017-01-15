@@ -102,6 +102,7 @@
 char *itostr2(const uint8_t &x);
 char *itostr31(const int &xx);
 char *itostr3(const int &xx);
+char *itostr3s(const int &xx);
 char *itostr3left(const int &xx);
 char *itostr4(const int &xx);
 

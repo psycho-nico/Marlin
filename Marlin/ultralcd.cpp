@@ -80,6 +80,12 @@ static void lcd_sdcard_menu();
 #ifdef ACTION_COMMAND
 static void lcd_action_menu();
 #endif
+#ifdef TWEAK_TEMP
+static void tweak_temps();
+static void tweak_fan();
+static void lcd_control_temp_override_menu();
+static void lcd_control_temp_offset_menu();
+#endif //TWEAK_TEMP
 
 static void lcd_quick_feedback();//Cause an LCD refresh, and give the user visual or audible feedback that something has happened
 
@@ -92,6 +98,7 @@ static void menu_action_sdfile(const char* filename, char* longFilename);
 static void menu_action_sddirectory(const char* filename, char* longFilename);
 static void menu_action_setting_edit_bool(const char* pstr, bool* ptr);
 static void menu_action_setting_edit_int3(const char* pstr, int* ptr, int minValue, int maxValue);
+static void menu_action_setting_edit_int3s(const char* pstr, int* ptr, int minValue, int maxValue);
 static void menu_action_setting_edit_int4(const char* pstr, int* ptr, int minValue, int maxValue);
 static void menu_action_setting_edit_float3(const char* pstr, float* ptr, float minValue, float maxValue);
 static void menu_action_setting_edit_float32(const char* pstr, float* ptr, float minValue, float maxValue);
@@ -101,6 +108,7 @@ static void menu_action_setting_edit_float52(const char* pstr, float* ptr, float
 static void menu_action_setting_edit_long5(const char* pstr, unsigned long* ptr, unsigned long minValue, unsigned long maxValue);
 static void menu_action_setting_edit_callback_bool(const char* pstr, bool* ptr, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_int3(const char* pstr, int* ptr, int minValue, int maxValue, menuFunc_t callbackFunc);
+static void menu_action_setting_edit_callback_int3s(const char* pstr, int* ptr, int minValue, int maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_int4(const char* pstr, int* ptr, int minValue, int maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float3(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float32(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
@@ -400,6 +408,7 @@ static void lcd_tune_menu()
     START_MENU();
     MENU_ITEM(back, MSG_MAIN, lcd_main_menu);
     MENU_ITEM_EDIT(int3, MSG_SPEED, &feedmultiply, 10, 999);
+#ifndef TWEAK_TEMP
     MENU_ITEM_EDIT(int3, MSG_NOZZLE, &target_temperature[0], 0, HEATER_0_MAXTEMP - 15);
 #if TEMP_SENSOR_1 != 0
     MENU_ITEM_EDIT(int3, MSG_NOZZLE1, &target_temperature[1], 0, HEATER_1_MAXTEMP - 15);
@@ -411,6 +420,19 @@ static void lcd_tune_menu()
     MENU_ITEM_EDIT(int3, MSG_BED, &target_temperature_bed, 0, BED_MAXTEMP - 15);
 #endif
     MENU_ITEM_EDIT(int3, MSG_FAN_SPEED, &fanSpeed, 0, 255);
+#else //TWEAK_TEMP
+    MENU_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE, &requested_temperature[0], 0, HEATER_0_MAXTEMP - 15, tweak_temps);
+#if TEMP_SENSOR_1 != 0
+    MENU_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE1, &requested_temperature[1], 0, HEATER_1_MAXTEMP - 15, tweak_temps);
+#endif
+#if TEMP_SENSOR_2 != 0
+    MENU_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE2, &requested_temperature[2], 0, HEATER_2_MAXTEMP - 15, tweak_temps);
+#endif
+#if TEMP_SENSOR_BED != 0
+    MENU_ITEM_EDIT_CALLBACK(int3, MSG_BED, &requested_temperature_bed, 0, BED_MAXTEMP - 15, tweak_temps);
+#endif
+    MENU_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED, &requested_fanSpeed, 0, 255, tweak_fan);
+#endif //TWEAK_TEMP
 #if !defined(ULTIMAKER_HBK) || (defined(ULTIMAKER_HBK) && EXTRUDERS == 1)
     MENU_ITEM_EDIT(int3, MSG_FLOW, &extrudemultiply, 10, 999);
 #endif
@@ -441,7 +463,11 @@ void lcd_preheat_pla0()
 {
     setTargetHotend0(plaPreheatHotendTemp);
     setTargetBed(plaPreheatHPBTemp);
+#ifndef TWEAK_TEMP
     fanSpeed = plaPreheatFanSpeed;
+#else //TWEAK_TEMP
+    setFanSpeed(plaPreheatFanSpeed);
+#endif //TWEAK_TEMP
     lcd_return_to_status();
     setWatch(); // heater sanity check timer
 }
@@ -450,7 +476,11 @@ void lcd_preheat_abs0()
 {
     setTargetHotend0(absPreheatHotendTemp);
     setTargetBed(absPreheatHPBTemp);
+#ifndef TWEAK_TEMP
     fanSpeed = absPreheatFanSpeed;
+#else //TWEAK_TEMP
+    setFanSpeed(absPreheatFanSpeed);
+#endif //TWEAK_TEMP
     lcd_return_to_status();
     setWatch(); // heater sanity check timer
 }
@@ -460,7 +490,11 @@ void lcd_preheat_pla1()
 {
     setTargetHotend1(plaPreheatHotendTemp);
     setTargetBed(plaPreheatHPBTemp);
+#ifndef TWEAK_TEMP
     fanSpeed = plaPreheatFanSpeed;
+#else //TWEAK_TEMP
+    setFanSpeed(plaPreheatFanSpeed);
+#endif //TWEAK_TEMP
     lcd_return_to_status();
     setWatch(); // heater sanity check timer
 }
@@ -469,7 +503,11 @@ void lcd_preheat_abs1()
 {
     setTargetHotend1(absPreheatHotendTemp);
     setTargetBed(absPreheatHPBTemp);
+#ifndef TWEAK_TEMP
     fanSpeed = absPreheatFanSpeed;
+#else //TWEAK_TEMP
+    setFanSpeed(absPreheatFanSpeed);
+#endif //TWEAK_TEMP
     lcd_return_to_status();
     setWatch(); // heater sanity check timer
 }
@@ -480,7 +518,11 @@ void lcd_preheat_pla2()
 {
     setTargetHotend2(plaPreheatHotendTemp);
     setTargetBed(plaPreheatHPBTemp);
+#ifndef TWEAK_TEMP
     fanSpeed = plaPreheatFanSpeed;
+#else //TWEAK_TEMP
+    setFanSpeed(plaPreheatFanSpeed);
+#endif //TWEAK_TEMP
     lcd_return_to_status();
     setWatch(); // heater sanity check timer
 }
@@ -489,7 +531,11 @@ void lcd_preheat_abs2()
 {
     setTargetHotend2(absPreheatHotendTemp);
     setTargetBed(absPreheatHPBTemp);
+#ifndef TWEAK_TEMP
     fanSpeed = absPreheatFanSpeed;
+#else //TWEAK_TEMP
+    setFanSpeed(absPreheatFanSpeed);
+#endif //TWEAK_TEMP
     lcd_return_to_status();
     setWatch(); // heater sanity check timer
 }
@@ -502,7 +548,11 @@ void lcd_preheat_pla012()
     setTargetHotend1(plaPreheatHotendTemp);
     setTargetHotend2(plaPreheatHotendTemp);
     setTargetBed(plaPreheatHPBTemp);
+#ifndef TWEAK_TEMP
     fanSpeed = plaPreheatFanSpeed;
+#else //TWEAK_TEMP
+    setFanSpeed(plaPreheatFanSpeed);
+#endif //TWEAK_TEMP
     lcd_return_to_status();
     setWatch(); // heater sanity check timer
 }
@@ -513,7 +563,11 @@ void lcd_preheat_abs012()
     setTargetHotend1(absPreheatHotendTemp);
     setTargetHotend2(absPreheatHotendTemp);
     setTargetBed(absPreheatHPBTemp);
+#ifndef TWEAK_TEMP
     fanSpeed = absPreheatFanSpeed;
+#else //TWEAK_TEMP
+    setFanSpeed(absPreheatFanSpeed);
+#endif //TWEAK_TEMP
     lcd_return_to_status();
     setWatch(); // heater sanity check timer
 }
@@ -522,7 +576,11 @@ void lcd_preheat_abs012()
 void lcd_preheat_pla_bedonly()
 {
     setTargetBed(plaPreheatHPBTemp);
+#ifndef TWEAK_TEMP
     fanSpeed = plaPreheatFanSpeed;
+#else //TWEAK_TEMP
+    setFanSpeed(plaPreheatFanSpeed);
+#endif //TWEAK_TEMP
     lcd_return_to_status();
     setWatch(); // heater sanity check timer
 }
@@ -530,7 +588,11 @@ void lcd_preheat_pla_bedonly()
 void lcd_preheat_abs_bedonly()
 {
     setTargetBed(absPreheatHPBTemp);
+#ifndef TWEAK_TEMP
     fanSpeed = absPreheatFanSpeed;
+#else //TWEAK_TEMP
+    setFanSpeed(absPreheatFanSpeed);
+#endif //TWEAK_TEMP
     lcd_return_to_status();
     setWatch(); // heater sanity check timer
 }
@@ -581,7 +643,11 @@ void lcd_cooldown()
     setTargetHotend1(0);
     setTargetHotend2(0);
     setTargetBed(0);
+#ifndef TWEAK_TEMP
     fanSpeed = 0;
+#else //TWEAK_TEMP
+    setFanSpeed(0);
+#endif //TWEAK_TEMP
     lcd_return_to_status();
 }
 
@@ -853,6 +919,67 @@ static void lcd_control_menu()
     END_MENU();
 }
 
+#ifdef TWEAK_TEMP
+// Apply tweaks
+static void tweak_temps()
+{
+    for (int i = 0; i < EXTRUDERS; i++) {
+        target_temperature[i] = tweakTempHotend(requested_temperature[i], i);
+    }
+    target_temperature_bed = tweakTempBed(requested_temperature_bed);
+}
+
+static void tweak_fan()
+{
+    fanSpeed = tweakFanSpeed(requested_fanSpeed);
+}
+
+static void lcd_control_temp_override_menu()
+{
+    START_MENU();
+    MENU_ITEM(back, MSG_TEMPERATURE, lcd_control_temperature_menu);
+    if (!offset_temperature[0])
+        MENU_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE, &override_temperature[0], 0, HEATER_0_MAXTEMP - 15, tweak_temps);
+#if TEMP_SENSOR_1 != 0
+    if (!offset_temperature[1])
+        MENU_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE1, &override_temperature[1], 0, HEATER_1_MAXTEMP - 15, tweak_temps);
+#endif
+#if TEMP_SENSOR_2 != 0
+    if (!offset_temperature[2])
+        MENU_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE2, &override_temperature[2], 0, HEATER_2_MAXTEMP - 15, tweak_temps);
+#endif
+#if TEMP_SENSOR_BED != 0
+    if (!offset_temperature_bed)
+        MENU_ITEM_EDIT_CALLBACK(int3, MSG_BED, &override_temperature_bed, 0, BED_MAXTEMP - 15, tweak_temps);
+#endif
+    if (ratio_fanSpeed == 100)
+        MENU_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED, &override_fanSpeed, 0, 255, tweak_fan);
+    END_MENU();
+}
+static void lcd_control_temp_offset_menu()
+{
+    START_MENU();
+    MENU_ITEM(back, MSG_TEMPERATURE, lcd_control_temperature_menu);
+    if (!override_temperature[0])
+        MENU_ITEM_EDIT_CALLBACK(int3s, MSG_NOZZLE, &offset_temperature[0], -TWEAK_MAX_OFFSET, TWEAK_MAX_OFFSET, tweak_temps);
+#if TEMP_SENSOR_1 != 0
+    if (!override_temperature[1])
+        MENU_ITEM_EDIT_CALLBACK(int3s, MSG_NOZZLE1, &offset_temperature[1], -TWEAK_MAX_OFFSET, TWEAK_MAX_OFFSET, tweak_temps);
+#endif
+#if TEMP_SENSOR_2 != 0
+    if (!override_temperature[2])
+        MENU_ITEM_EDIT_CALLBACK(int3s, MSG_NOZZLE2, &offset_temperature[2], -TWEAK_MAX_OFFSET, TWEAK_MAX_OFFSET, tweak_temps);
+#endif
+#if TEMP_SENSOR_BED != 0
+    if (!override_temperature_bed)
+        MENU_ITEM_EDIT_CALLBACK(int3s, MSG_BED, &offset_temperature_bed, -TWEAK_MAX_OFFSET, TWEAK_MAX_OFFSET, tweak_temps);
+#endif
+    if (!override_fanSpeed)
+        MENU_ITEM_EDIT_CALLBACK(int3, MSG_FAN_OFFSET, &ratio_fanSpeed, 0, 200, tweak_fan);
+    END_MENU();
+}
+#endif //TWEAK_TEMP
+
 static void lcd_control_temperature_menu()
 {
 #ifdef PIDTEMP
@@ -867,6 +994,7 @@ static void lcd_control_temperature_menu()
 
     START_MENU();
     MENU_ITEM(back, MSG_CONTROL, lcd_control_menu);
+#ifndef TWEAK_TEMP
     MENU_ITEM_EDIT(int3, MSG_NOZZLE, &target_temperature[0], 0, HEATER_0_MAXTEMP - 15);
 #if TEMP_SENSOR_1 != 0
     MENU_ITEM_EDIT(int3, MSG_NOZZLE1, &target_temperature[1], 0, HEATER_1_MAXTEMP - 15);
@@ -878,6 +1006,23 @@ static void lcd_control_temperature_menu()
     MENU_ITEM_EDIT(int3, MSG_BED, &target_temperature_bed, 0, BED_MAXTEMP - 15);
 #endif
     MENU_ITEM_EDIT(int3, MSG_FAN_SPEED, &fanSpeed, 0, 255);
+#else //TWEAK_TEMP
+    MENU_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE, &requested_temperature[0], 0, HEATER_0_MAXTEMP - 15, tweak_temps);
+#if TEMP_SENSOR_1 != 0
+    MENU_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE1, &requested_temperature[1], 0, HEATER_1_MAXTEMP - 15, tweak_temps);
+#endif
+#if TEMP_SENSOR_2 != 0
+    MENU_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE2, &requested_temperature[2], 0, HEATER_2_MAXTEMP - 15, tweak_temps);
+#endif
+#if TEMP_SENSOR_BED != 0
+    MENU_ITEM_EDIT_CALLBACK(int3, MSG_BED, &requested_temperature_bed, 0, BED_MAXTEMP - 15, tweak_temps);
+#endif
+    MENU_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED, &requested_fanSpeed, 0, 255, tweak_fan);
+#endif //TWEAK_TEMP
+#if TWEAK_TEMP
+    MENU_ITEM(submenu, MSG_TEMP_OVERRIDE, lcd_control_temp_override_menu);
+    MENU_ITEM(submenu, MSG_TEMP_OFFSET, lcd_control_temp_offset_menu);
+#endif
 #ifdef AUTOTEMP
     MENU_ITEM_EDIT(bool, MSG_AUTOTEMP, &autotemp_enabled);
     MENU_ITEM_EDIT(float3, MSG_MIN, &autotemp_min, 0, HEATER_0_MAXTEMP - 15);
@@ -1196,6 +1341,7 @@ static void lcd_action_menu()
         callbackFunc = callback;\
     }
 menu_edit_type(int, int3, itostr3, 1)
+menu_edit_type(int, int3s, itostr3s, 1)
 menu_edit_type(int, int4, itostr4, 0.1)
 menu_edit_type(float, float3, ftostr3, 1)
 menu_edit_type(float, float32, ftostr32, 100)
@@ -1676,6 +1822,18 @@ char *itostr3(const int &xx)
     conv[1]=' ';
   conv[2]=(xx)%10+'0';
   conv[3]=0;
+  return conv;
+}
+
+// Signed version of itostr3
+char *itostr3s(const int &xx)
+{
+  int x=abs(xx);
+  conv[0]=(xx>=0)?'+':'-';
+  conv[1]=(x/100)%10+'0';
+  conv[2]=(x/10)%10+'0';
+  conv[3]=x%10+'0';
+  conv[4]=0;
   return conv;
 }
 

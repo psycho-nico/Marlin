@@ -1850,7 +1850,11 @@ void process_commands()
         }
       #if defined(FAN_PIN) && FAN_PIN > -1
         if (pin_number == FAN_PIN)
+          #ifndef TWEAK_TEMP 
           fanSpeed = pin_status;
+          #else //TWEAK_TEMP 
+          setFanSpeed(pin_status);
+          #endif //TWEAK_TEMP
       #endif
       // LED Brightness
       #if defined(LED_PIN) && LED_PIN > -1
@@ -2075,14 +2079,26 @@ void process_commands()
     #if defined(FAN_PIN) && FAN_PIN > -1
       case 106: //M106 Fan On
         if (code_seen('S')){
+           #ifndef TWEAK_TEMP
            fanSpeed=constrain(code_value(),0,255);
+           #else //TWEAK_TEMP
+           setFanSpeed(constrain(code_value(),0,255));
+           #endif //TWEAK_TEMP
         }
         else {
+          #ifndef TWEAK_TEMP
           fanSpeed=255;
+          #else //TWEAK_TEMP
+          setFanSpeed(255);
+          #endif //TWEAK_TEMP
         }
         break;
       case 107: //M107 Fan Off
+        #ifndef TWEAK_TEMP
         fanSpeed = 0;
+        #else //TWEAK_TEMP
+        setFanSpeed(0);
+        #endif //TWEAK_TEMP
         break;
     #endif //FAN_PIN
     #ifdef BARICUDA
@@ -2145,7 +2161,11 @@ void process_commands()
         disable_e1();
         disable_e2();
         finishAndDisableSteppers();
+        #ifndef TWEAK_TEMP
         fanSpeed = 0;
+        #else //TWEAK_TEMP
+        setFanSpeed(0);
+        #endif //TWEAK_TEMP
         delay(1000); // Wait a little before to switch off
       #if defined(SUICIDE_PIN) && SUICIDE_PIN > -1
         st_synchronize();
