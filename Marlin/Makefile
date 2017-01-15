@@ -267,10 +267,11 @@ SRC = wiring.c
 VPATH += $(ARDUINO_INSTALL_DIR)/hardware/teensy/cores/teensy
 endif
 CXXSRC = WMath.cpp WString.cpp Print.cpp Marlin_main.cpp	\
+    ultralcd.cpp \
 	MarlinSerial.cpp Sd2Card.cpp SdBaseFile.cpp SdFatUtil.cpp	\
 	SdFile.cpp SdVolume.cpp motion_control.cpp planner.cpp		\
 	stepper.cpp temperature.cpp cardreader.cpp ConfigurationStore.cpp \
-	watchdog.cpp SPI.cpp Servo.cpp Tone.cpp ultralcd.cpp digipot_mcp4451.cpp \
+	watchdog.cpp SPI.cpp Servo.cpp Tone.cpp digipot_mcp4451.cpp \
 	vector_3.cpp qr_solve.cpp
 
 ifeq ($(U8GLIB), 1)
