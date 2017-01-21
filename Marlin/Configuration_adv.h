@@ -92,7 +92,7 @@
 //=============================Mechanical Settings===========================
 //===========================================================================
 
-#ifdef ULTIMAKER_HBK
+#if defined(ULTIMAKER_HBK) || defined(SOFT_ENDSTOPS)
 #define ENDSTOPS_ONLY_FOR_HOMING // If defined the endstops will only be used for homing
 #endif
 
