@@ -276,6 +276,12 @@
 	#define MSG_TEMP_OFFSET "Temp. offsets"
     #define MSG_FAN_OFFSET "Fan spd (%)"
 
+    #define MSG_ZA_ADJUST "Adjust Z offset"
+    #define MSG_ZA_HOME "Reset offset/home"
+    #define MSG_ZA_QUICK "Quick adjust"
+    #define MSG_ZA_FINE "Fine adjust"
+    #define MSG_ZA_SAVE "Save"
+
 #endif
 
 
@@ -689,6 +695,12 @@
 	#define MSG_TEMP_OVERRIDE "Temp. fixees"
 	#define MSG_TEMP_OFFSET "Temp. ajustees"
     #define MSG_FAN_OFFSET "Vit vent (%)"
+
+    #define MSG_ZA_ADJUST "Adjuster Z offset"
+    #define MSG_ZA_HOME "RAZ offset & home"
+    #define MSG_ZA_QUICK "Adjust. rapide"
+    #define MSG_ZA_FINE "Ajust. fin"
+    #define MSG_ZA_SAVE "Sauver"
 
 #endif
 

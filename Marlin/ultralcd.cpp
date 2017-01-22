@@ -86,6 +86,14 @@ static void tweak_fan();
 static void lcd_control_temp_override_menu();
 static void lcd_control_temp_offset_menu();
 #endif //TWEAK_TEMP
+#ifdef SOFT_Z_ALIGN
+static void lcd_z_align_menu();
+static void lcd_z_align_home();
+static void lcd_z_align_quick();
+static void lcd_z_align_fine();
+static void lcd_z_align_move(const float &z_step);
+static void lcd_z_align_save();
+#endif // SOFT_Z_ALIGN
 
 static void lcd_quick_feedback();//Cause an LCD refresh, and give the user visual or audible feedback that something has happened
 
@@ -695,6 +703,9 @@ static void lcd_prepare_menu()
     }
 #endif
     MENU_ITEM(submenu, MSG_MOVE_AXIS, lcd_move_menu);
+#ifdef SOFT_Z_ALIGN
+    MENU_ITEM(submenu, MSG_ZA_ADJUST, lcd_z_align_menu);
+#endif // SOFT_Z_ALIGN
     END_MENU();
 }
 
@@ -823,6 +834,89 @@ static void lcd_prepare_move_z()
     }
 }
 #endif
+#ifdef SOFT_Z_ALIGN
+static void lcd_z_align_menu()
+{
+    START_MENU();
+    MENU_ITEM(back, MSG_PREPARE, lcd_prepare_menu);
+    MENU_ITEM(function, MSG_ZA_HOME, lcd_z_align_home);
+    MENU_ITEM(submenu, MSG_ZA_QUICK, lcd_z_align_quick);
+    MENU_ITEM(submenu, MSG_ZA_FINE, lcd_z_align_fine);
+    MENU_ITEM(function, MSG_ZA_SAVE, lcd_z_align_save);
+    END_MENU();
+}
+static void lcd_z_align_home()
+{
+    char buffer[32];
+
+    add_homeing[Z_AXIS] = 0; // Reset offset
+    enquecommand_P(PSTR("G28 Z")); // HOME
+    if (Z_HOME_DIR == 1) {
+        // If we home at Z max (bottom), raise bed to safe distance
+        sprintf_P(buffer, PSTR("G1 F%i Z%i"), int(homing_feedrate[Z_AXIS]), 35);
+        enquecommand(buffer);
+    }
+}
+static void lcd_z_align_quick()
+{
+    lcd_z_align_move(1);
+}
+static void lcd_z_align_fine()
+{
+    lcd_z_align_move(0.01);
+}
+static void lcd_z_align_move(const float &z_step)
+{
+    // Minimum movements the planner will do
+    float min_x_move = (dropsegments + 1) / axis_steps_per_unit[X_AXIS];
+    float min_z_move = (dropsegments + 1) / axis_steps_per_unit[Z_AXIS];
+    static int x_toggle = 1;
+    float delta_z;
+
+    if (encoderPosition != 0)
+    {
+        refresh_cmd_timeout();
+        delta_z = float((int)encoderPosition) * z_step;
+        current_position[Z_AXIS] += delta_z;
+        if (abs(delta_z) < min_z_move) {
+            // Planner won't move for this z value, add some movement!
+            current_position[X_AXIS] += min_x_move * x_toggle;
+            x_toggle = -x_toggle;
+        }
+        encoderPosition = 0;
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], manual_feedrate[Z_AXIS]/60, active_extruder);
+        lcdDrawUpdate = 1;
+    }
+    if (lcdDrawUpdate)
+    {
+        lcd_implementation_drawedit(PSTR("Z"), ftostr32(current_position[Z_AXIS]));
+    }
+    if (LCD_CLICKED)
+    {
+        lcd_quick_feedback();
+        currentMenu = lcd_z_align_menu;
+        encoderPosition = 0;
+    }
+
+}
+static void lcd_z_align_save()
+{
+    char buffer[32];
+
+    // Update homeing offset & save to EEPROM
+    add_homeing[Z_AXIS] -= current_position[Z_AXIS];
+    Config_StoreSettings();
+
+    // Reset position and update planner
+    current_position[Z_AXIS] = 0;
+    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+
+    // Lower bed
+    sprintf_P(buffer, PSTR("G1 F%i Z5"), int(homing_feedrate[Z_AXIS]));
+    enquecommand(buffer);
+}
+#endif // SOFT_Z_ALIGN
+
 static void lcd_move_e()
 {
     if (encoderPosition != 0)

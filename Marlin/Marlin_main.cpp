@@ -3265,7 +3265,17 @@ void clamp_to_software_endstops(float target[3])
   if (min_software_endstops) {
     if (target[X_AXIS] < min_pos[X_AXIS]) target[X_AXIS] = min_pos[X_AXIS];
     if (target[Y_AXIS] < min_pos[Y_AXIS]) target[Y_AXIS] = min_pos[Y_AXIS];
+#ifndef SOFT_Z_ALIGN
     if (target[Z_AXIS] < min_pos[Z_AXIS]) target[Z_AXIS] = min_pos[Z_AXIS];
+#else //SOFT_Z_ALIGN
+    if (Z_HOME_DIR == -1) {
+        // If we soft align on top, need to account for the fact that the home
+        // switch is not the end position
+        if (target[Z_AXIS] < min_pos[Z_AXIS] - add_homeing[Z_AXIS]) target[Z_AXIS] = min_pos[Z_AXIS] - add_homeing[Z_AXIS];
+    } else {
+        if (target[Z_AXIS] < min_pos[Z_AXIS]) target[Z_AXIS] = min_pos[Z_AXIS];
+    }
+#endif //SOFT_Z_ALIGN
   }
 
   if (max_software_endstops) {
