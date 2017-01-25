@@ -875,7 +875,14 @@ static void lcd_z_align_home()
     char buffer[32];
 
     add_homeing[Z_AXIS] = 0; // Reset offset
-    enquecommand_P(PSTR("G28 Z")); // HOME
+    // Home, Z first
+    enquecommand_P(PSTR("G28 Z0"));
+    enquecommand_P(PSTR("G28 X0 Y0"));
+    // Center head
+    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[X_AXIS]),
+        SOFT_Z_ALIGN_XL+(SOFT_Z_ALIGN_XR-SOFT_Z_ALIGN_XL)/2,
+        SOFT_Z_ALIGN_YF+(SOFT_Z_ALIGN_YR-SOFT_Z_ALIGN_YF)/2);
+    enquecommand(buffer);
     if (Z_HOME_DIR == 1) {
         // If we home at Z max (bottom), raise bed to safe distance
         sprintf_P(buffer, PSTR("G1 F%i Z%i"), int(homing_feedrate[Z_AXIS]), 35);
