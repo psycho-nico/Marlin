@@ -281,6 +281,12 @@
     #define MSG_ZA_QUICK "Quick adjust"
     #define MSG_ZA_FINE "Fine adjust"
     #define MSG_ZA_SAVE "Save"
+    #define MSG_ZA_MOVE_FL "Move Front Left"
+    #define MSG_ZA_MOVE_FR "Move Front Right"
+    #define MSG_ZA_MOVE_RL "Move Rear Left"
+    #define MSG_ZA_MOVE_RR "Move Rear Right"
+    #define MSG_ZA_MOVE_RM "Move Rear Middle"
+    #define MSG_ZA_MOVE_MM "Move Center"
 
 #endif
 
@@ -696,11 +702,18 @@
 	#define MSG_TEMP_OFFSET "Temp. ajustees"
     #define MSG_FAN_OFFSET "Vit vent (%)"
 
-    #define MSG_ZA_ADJUST "Adjuster Z offset"
+    #define MSG_ZA_ADJUST "Ajuster Z offset"
     #define MSG_ZA_HOME "RAZ offset & home"
-    #define MSG_ZA_QUICK "Adjust. rapide"
-    #define MSG_ZA_FINE "Ajust. fin"
+    #define MSG_ZA_QUICK "Ajustement rapide"
+    #define MSG_ZA_FINE "Ajustement fin"
     #define MSG_ZA_SAVE "Sauver"
+
+    #define MSG_ZA_MOVE_FL "Depl. Avant Gauch"
+    #define MSG_ZA_MOVE_FR "Depl. Avant Droit"
+    #define MSG_ZA_MOVE_RL "Depl. Arr. Gauche"
+    #define MSG_ZA_MOVE_RR "Depl. Arr. Droit"
+    #define MSG_ZA_MOVE_RM "Depl. Arriere"
+    #define MSG_ZA_MOVE_MM "Depl. Centre"
 
 #endif
 

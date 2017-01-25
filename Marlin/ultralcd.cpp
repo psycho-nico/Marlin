@@ -87,11 +87,27 @@ static void lcd_control_temp_override_menu();
 static void lcd_control_temp_offset_menu();
 #endif //TWEAK_TEMP
 #ifdef SOFT_Z_ALIGN
+// Position for bed adjustments
+#define SOFT_Z_ALIGN_XL (X_MIN_POS + 5)
+#define SOFT_Z_ALIGN_XR (X_MAX_POS - 10)
+#define SOFT_Z_ALIGN_YF (Y_MIN_POS + 5)
+#define SOFT_Z_ALIGN_YR (Y_MAX_POS - 10)
 static void lcd_z_align_menu();
 static void lcd_z_align_home();
 static void lcd_z_align_quick();
 static void lcd_z_align_fine();
 static void lcd_z_align_move(const float &z_step);
+static void lcd_z_align_move_xy_fl();
+static void lcd_z_align_move_xy_fr();
+#ifdef ULTIMAKER_HBK
+static void lcd_z_align_move_xy_rm();
+#else
+static void lcd_z_align_move_xy_rl();
+static void lcd_z_align_move_xy_rr();
+#endif
+static void lcd_z_align_move_xy_rm();
+static void lcd_z_align_move_xy_mm();
+static void lcd_z_align_move_xy(const float &x, const float &y);
 static void lcd_z_align_save();
 #endif // SOFT_Z_ALIGN
 
@@ -843,6 +859,15 @@ static void lcd_z_align_menu()
     MENU_ITEM(submenu, MSG_ZA_QUICK, lcd_z_align_quick);
     MENU_ITEM(submenu, MSG_ZA_FINE, lcd_z_align_fine);
     MENU_ITEM(function, MSG_ZA_SAVE, lcd_z_align_save);
+    MENU_ITEM(function, MSG_ZA_MOVE_FL, lcd_z_align_move_xy_fl);
+    MENU_ITEM(function, MSG_ZA_MOVE_FR, lcd_z_align_move_xy_fr);
+    #ifdef ULTIMAKER_HBK
+    MENU_ITEM(function, MSG_ZA_MOVE_RM, lcd_z_align_move_xy_rm);
+    #else
+    MENU_ITEM(function, MSG_ZA_MOVE_RL, lcd_z_align_move_xy_rl);
+    MENU_ITEM(function, MSG_ZA_MOVE_RR, lcd_z_align_move_xy_rr);
+    #endif
+    MENU_ITEM(function, MSG_ZA_MOVE_MM, lcd_z_align_move_xy_mm);
     END_MENU();
 }
 static void lcd_z_align_home()
@@ -899,6 +924,41 @@ static void lcd_z_align_move(const float &z_step)
     }
 
 }
+static void lcd_z_align_move_xy_fl(){
+    lcd_z_align_move_xy(SOFT_Z_ALIGN_XL, SOFT_Z_ALIGN_YF);
+}
+static void lcd_z_align_move_xy_fr(){
+    lcd_z_align_move_xy(SOFT_Z_ALIGN_XR, SOFT_Z_ALIGN_YF);
+}
+#ifdef ULTIMAKER_HBK
+static void lcd_z_align_move_xy_rm(){
+    lcd_z_align_move_xy(SOFT_Z_ALIGN_XL+(SOFT_Z_ALIGN_XR-SOFT_Z_ALIGN_XL)/2, SOFT_Z_ALIGN_YR);
+}
+#else
+static void lcd_z_align_move_xy_rl(){
+    lcd_z_align_move_xy(SOFT_Z_ALIGN_XL, SOFT_Z_ALIGN_YR);
+}
+static void lcd_z_align_move_xy_rr(){
+    lcd_z_align_move_xy(SOFT_Z_ALIGN_XR, SOFT_Z_ALIGN_YR);
+}
+#endif
+static void lcd_z_align_move_xy_mm(){
+    lcd_z_align_move_xy(SOFT_Z_ALIGN_XL+(SOFT_Z_ALIGN_XR-SOFT_Z_ALIGN_XL)/2, SOFT_Z_ALIGN_YF+(SOFT_Z_ALIGN_YR-SOFT_Z_ALIGN_YF)/2);
+}
+static void lcd_z_align_move_xy(const float &x, const float &y){
+    float z;
+
+    // We need to address the planner directly as the G-Code engine will clip to endstops
+    z = current_position[Z_AXIS];
+    current_position[Z_AXIS] += 5.0;
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS]/60, active_extruder);
+    current_position[X_AXIS] = x;
+    current_position[Y_AXIS] = y;
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder);
+    current_position[Z_AXIS] = z;
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS]/60, active_extruder);
+}
+
 static void lcd_z_align_save()
 {
     char buffer[32];
