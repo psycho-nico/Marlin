@@ -109,6 +109,7 @@ static void lcd_z_align_move_xy_rm();
 static void lcd_z_align_move_xy_mm();
 static void lcd_z_align_move_xy(const float &x, const float &y);
 static void lcd_z_align_save();
+static bool lcd_disable_timeout = false;
 #endif // SOFT_Z_ALIGN
 
 static void lcd_quick_feedback();//Cause an LCD refresh, and give the user visual or audible feedback that something has happened
@@ -721,6 +722,7 @@ static void lcd_prepare_menu()
     MENU_ITEM(submenu, MSG_MOVE_AXIS, lcd_move_menu);
 #ifdef SOFT_Z_ALIGN
     MENU_ITEM(submenu, MSG_ZA_ADJUST, lcd_z_align_menu);
+    lcd_disable_timeout = false;
 #endif // SOFT_Z_ALIGN
     END_MENU();
 }
@@ -853,6 +855,7 @@ static void lcd_prepare_move_z()
 #ifdef SOFT_Z_ALIGN
 static void lcd_z_align_menu()
 {
+    lcd_disable_timeout = true;
     START_MENU();
     MENU_ITEM(back, MSG_PREPARE, lcd_prepare_menu);
     MENU_ITEM(function, MSG_ZA_HOME, lcd_z_align_home);
@@ -1721,6 +1724,10 @@ void lcd_update()
         }
         if (LCD_CLICKED)
             timeoutToStatus = millis() + LCD_TIMEOUT_TO_STATUS;
+#ifdef SOFT_Z_ALIGN
+        if (lcd_disable_timeout)
+            timeoutToStatus = millis() + LCD_TIMEOUT_TO_STATUS;
+#endif
 #endif//ULTIPANEL
 
 #ifdef DOGLCD        // Changes due to different driver architecture of the DOGM display
