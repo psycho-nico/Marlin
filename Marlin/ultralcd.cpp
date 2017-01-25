@@ -1444,7 +1444,7 @@ static void lcd_action_menu()
 #define menu_edit_type(_type, _name, _strFunc, scale) \
     void menu_edit_ ## _name () \
     { \
-        if ((int32_t)encoderPosition < 0) \
+        if (encoderPosition > 0x8000) \
             encoderPosition = 0; \
         if ((int32_t)encoderPosition > maxEditValue) \
             encoderPosition = maxEditValue; \
