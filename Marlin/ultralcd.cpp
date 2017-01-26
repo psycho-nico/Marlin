@@ -93,7 +93,9 @@ static void lcd_control_temp_offset_menu();
 #define SOFT_Z_ALIGN_YF (Y_MIN_POS + 5)
 #define SOFT_Z_ALIGN_YR (Y_MAX_POS - 10)
 static void lcd_z_align_menu();
-static void lcd_z_align_home();
+static void lcd_z_align_home_reset();
+static void lcd_z_align_home_current();
+static void lcd_z_align_home(const bool &reset);
 static void lcd_z_align_quick();
 static void lcd_z_align_fine();
 static void lcd_z_align_move(const float &z_step);
@@ -109,6 +111,7 @@ static void lcd_z_align_move_xy_rm();
 static void lcd_z_align_move_xy_mm();
 static void lcd_z_align_move_xy(const float &x, const float &y);
 static void lcd_z_align_save();
+static bool lcd_z_align_ready = false;
 static bool lcd_disable_timeout = false;
 #endif // SOFT_Z_ALIGN
 
@@ -723,6 +726,7 @@ static void lcd_prepare_menu()
 #ifdef SOFT_Z_ALIGN
     MENU_ITEM(submenu, MSG_ZA_ADJUST, lcd_z_align_menu);
     lcd_disable_timeout = false;
+    lcd_z_align_ready = false;
 #endif // SOFT_Z_ALIGN
     END_MENU();
 }
@@ -858,26 +862,40 @@ static void lcd_z_align_menu()
     lcd_disable_timeout = true;
     START_MENU();
     MENU_ITEM(back, MSG_PREPARE, lcd_prepare_menu);
-    MENU_ITEM(function, MSG_ZA_HOME, lcd_z_align_home);
-    MENU_ITEM(submenu, MSG_ZA_QUICK, lcd_z_align_quick);
-    MENU_ITEM(submenu, MSG_ZA_FINE, lcd_z_align_fine);
-    MENU_ITEM(function, MSG_ZA_SAVE, lcd_z_align_save);
-    MENU_ITEM(function, MSG_ZA_MOVE_FL, lcd_z_align_move_xy_fl);
-    MENU_ITEM(function, MSG_ZA_MOVE_FR, lcd_z_align_move_xy_fr);
-    #ifdef ULTIMAKER_HBK
-    MENU_ITEM(function, MSG_ZA_MOVE_RM, lcd_z_align_move_xy_rm);
-    #else
-    MENU_ITEM(function, MSG_ZA_MOVE_RL, lcd_z_align_move_xy_rl);
-    MENU_ITEM(function, MSG_ZA_MOVE_RR, lcd_z_align_move_xy_rr);
-    #endif
-    MENU_ITEM(function, MSG_ZA_MOVE_MM, lcd_z_align_move_xy_mm);
+    MENU_ITEM(function, MSG_ZA_HOME_RESET, lcd_z_align_home_reset);
+    if (add_homeing[Z_AXIS] != 0) {
+        MENU_ITEM(function, MSG_ZA_HOME_CURRENT, lcd_z_align_home_current);
+    }
+    if (lcd_z_align_ready) {
+        MENU_ITEM(submenu, MSG_ZA_QUICK, lcd_z_align_quick);
+        MENU_ITEM(submenu, MSG_ZA_FINE, lcd_z_align_fine);
+        MENU_ITEM(function, MSG_ZA_SAVE, lcd_z_align_save);
+        MENU_ITEM(function, MSG_ZA_MOVE_FL, lcd_z_align_move_xy_fl);
+        MENU_ITEM(function, MSG_ZA_MOVE_FR, lcd_z_align_move_xy_fr);
+        #ifdef ULTIMAKER_HBK
+        MENU_ITEM(function, MSG_ZA_MOVE_RM, lcd_z_align_move_xy_rm);
+        #else
+        MENU_ITEM(function, MSG_ZA_MOVE_RL, lcd_z_align_move_xy_rl);
+        MENU_ITEM(function, MSG_ZA_MOVE_RR, lcd_z_align_move_xy_rr);
+        #endif
+        MENU_ITEM(function, MSG_ZA_MOVE_MM, lcd_z_align_move_xy_mm);
+    }
     END_MENU();
 }
-static void lcd_z_align_home()
+static void lcd_z_align_home_reset() {
+    lcd_z_align_home(true);
+}
+static void lcd_z_align_home_current() {
+    lcd_z_align_home(false);
+}
+
+static void lcd_z_align_home(const bool &reset)
 {
     char buffer[32];
 
-    add_homeing[Z_AXIS] = 0; // Reset offset
+    lcd_z_align_ready = true;
+    if (reset)
+        add_homeing[Z_AXIS] = 0; // Reset offset
     // Home, Z first
     enquecommand_P(PSTR("G28 Z0"));
     enquecommand_P(PSTR("G28 X0 Y0"));
@@ -886,9 +904,13 @@ static void lcd_z_align_home()
         SOFT_Z_ALIGN_XL+(SOFT_Z_ALIGN_XR-SOFT_Z_ALIGN_XL)/2,
         SOFT_Z_ALIGN_YF+(SOFT_Z_ALIGN_YR-SOFT_Z_ALIGN_YF)/2);
     enquecommand(buffer);
-    if (Z_HOME_DIR == 1) {
+    if (!reset) {
+        // Move to Z0 at moderate speed
+        sprintf_P(buffer, PSTR("G1 F%i Z0"), int(homing_feedrate[Z_AXIS])/2);
+        enquecommand(buffer);
+    } else if (Z_HOME_DIR == 1) {
         // If we home at Z max (bottom), raise bed to safe distance
-        sprintf_P(buffer, PSTR("G1 F%i Z%i"), int(homing_feedrate[Z_AXIS]), 35);
+        sprintf_P(buffer, PSTR("G1 F%i Z35"), int(homing_feedrate[Z_AXIS]));
         enquecommand(buffer);
     }
 }
@@ -984,6 +1006,10 @@ static void lcd_z_align_save()
     // Lower bed
     sprintf_P(buffer, PSTR("G1 F%i Z5"), int(homing_feedrate[Z_AXIS]));
     enquecommand(buffer);
+
+    // Reset menu
+    lcd_z_align_ready = false;
+    encoderPosition = 0;
 }
 #endif // SOFT_Z_ALIGN
 
