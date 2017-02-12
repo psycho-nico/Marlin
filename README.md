@@ -41,6 +41,13 @@ article.
 ## Feature summary
 This list summarizes the features offered by the firmware (F) and/or the builder (B)
 
+- 17.01: Merge 17.01 RC into stable.
+- 17.01-RC2 - F/B - Software adjustable bed leveling.  
+    Adjust your bed level in the same way the Ultimaker2 does.
+- 17.01-RC2 - F/B - Software endstops for UMO.  
+    UMO with HBK and UMO+ are using "software endstops": limit switches are 
+    only used for homing. This feature allows you to have software endstops
+    on the UMO as well.
 - 17.01-RC1 - F/B - Temperature tweak feature.  
     Allows temperatures (and fan) 
     tweaks from the controller.  
