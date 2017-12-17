@@ -2941,6 +2941,9 @@ void process_commands()
         }
 
         //return to normal
+        #ifdef ULTRA_LCD
+          lcd_reset_alert_level();
+        #endif
         if(code_seen('L'))
         {
           target[E_AXIS]+= -code_value();
