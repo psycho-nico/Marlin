@@ -1381,7 +1381,7 @@ int tweakFanSpeed(const int &speed) {
     if (override_fanSpeed)
         return override_fanSpeed;
     if (ratio_fanSpeed != 100)
-        return constrain(((speed * ratio_fanSpeed) + 49) / 100, 0, 255);
+        return constrain(int(((speed * (unsigned)ratio_fanSpeed) + 49) / 100), 0, 255);
     else
         return speed;
 };
